@@ -44,6 +44,15 @@ securityContext:
   runAsNonRoot: true
   runAsUser: 1000
 
+# Args to be passed to service startup script. Entrypoint command is set to:
+# - /opt/keycloak/bin/kc.sh
+# - start
+args: []
+#   - --http-enabled=true
+#   - --http-port=8080
+#   - --hostname-strict=false
+#   - --hostname-strict-https=false
+
 resources: {}
   # limits:
   #   cpu: 100m
