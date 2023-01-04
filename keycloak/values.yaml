@@ -53,6 +53,12 @@ args: []
 #   - --hostname-strict=false
 #   - --hostname-strict-https=false
 
+# Keycloak environment variables
+env: []
+#   - name: KC_HOSTNAME
+#     value: keycloak.barravar.com.br
+
+
 resources: {}
   # limits:
   #   cpu: 100m
@@ -60,6 +66,10 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+proxy:
+  enabled: true
+  mode: edge
 
 health:
   enabled: true
