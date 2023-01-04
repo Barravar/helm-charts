@@ -92,7 +92,7 @@
           }
         }
       },
-      "env": {
+      "extraEnvs": {
         "type": "array"
       },
       "extraContainers": {

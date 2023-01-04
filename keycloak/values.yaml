@@ -44,11 +44,15 @@ securityContext:
   runAsNonRoot: true
   runAsUser: 1000
 
-# Keycloak environment variables
+# Extra Keycloak environment variables
 # Use ports.http (HTTP_PORT) and ports.https (HTTPS_PORT) to define custom ports
-env: []
+extraEnvs: []
 #  - name: KC_HOSTNAME
 #    value: keycloak.barravar.com.br
+#  - name: KEYCLOAK_ADMIN
+#    value: admin
+#  - name: KEYCLOAK_ADMIN_PASSWORD
+#    value: password
 
 # Keycloak HTTP and HTTPS ports.
 # If not set, default HTTP port is exposed (8080). HTTPS port is only exposed if explicitly set.
@@ -73,7 +77,7 @@ health:
 
   startupProbe: |
     httpGet:
-      path: /auth/health
+      path: /health
       port: http
     initialDelaySeconds: 30
     timeoutSeconds: 1
@@ -82,14 +86,14 @@ health:
 
   readinessProbe: |
     httpGet:
-      path: /auth/health/ready
+      path: /health/ready
       port: http
     initialDelaySeconds: 30
     timeoutSeconds: 1
 
   livenessProbe: |
     httpGet:
-      path: /auth/health/live
+      path: /health/live
       port: http
     initialDelaySeconds: 0
     timeoutSeconds: 5

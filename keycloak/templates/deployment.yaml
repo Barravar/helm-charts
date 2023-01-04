@@ -47,9 +47,21 @@ spec:
           {{- if .Values.ports.https }}
           {{- "- --https-port="{{ .Values.ports.https }} | nindent 12 }}
           {{- end }}
-          {{- if .Values.env }}
           env:
-          {{- toYaml .Values.env | nindent 12 }}
+            - name: KC_CACHE
+              value: "ispn"
+            - name: KC_CACHE_STACK
+              value: "kubernetes"
+          {{- if .Values.health.enabled }}
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+          {{- end }}
+          {{- if .Values.proxy.enabled }}
+            - name: KC_PROXY
+              value: {{ .Values.proxy.mode }}
+          {{- end }}
+          {{- with .Values.extraEnv }}
+          {{- tpl . $ | nindent 12 }}
           {{- end }}
           ports:
             - name: http
