@@ -50,14 +50,11 @@ env: []
 #  - name: KC_HOSTNAME
 #    value: keycloak.barravar.com.br
 
-# Keycloak pod ports to be exposed
+# Keycloak HTTP and HTTPS ports.
+# If not set, default HTTP port is exposed (8080). HTTPS port is only exposed if explicitly set.
 ports: {}
-#  http:
-#    enabled: true
-#    port: 8080
-#  https:
-#    enabled: false
-#    port: 8443
+#  http: 8080
+#  https: 8443
 
 resources: {}
 #  limits:

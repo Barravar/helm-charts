@@ -36,17 +36,17 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /opt/keycloak/bin/kc.sh
-            - start
-          {{- with .Values.ports }}
           args:
-          {{- if .Values.ports.http.enabled }}
-          {{- "- --http-enabled=true" | nindent 12 }}
-          {{- "- --http-port={{ .Values.ports.http.port }}" | nindent 12 }}
+            - start
+            - --http-enabled=true
+          {{- if .Values.ports.http }}
+          {{- "- --http-port={{ .Values.ports.http }}" | nindent 12 }}
+          {{- else }}
+          {{- "- --http-port=8080 }}" | nindent 12}}
           {{- end }}
-          {{- if .Values.ports.https.enabled }}
+          {{- if .Values.ports.https }}
           {{- "- --https-enabled=true" | nindent 12 }}
-          {{- "- --https-port={{ .Values.ports.https.port }}" | nindent 12 }}
-          {{- end }}
+          {{- "- --https-port={{ .Values.ports.https }}" | nindent 12 }}
           {{- end }}
           {{- if .Values.env }}
           env:
@@ -55,14 +55,14 @@ spec:
           ports:
             - name: http
               protocol: TCP
-            {{- if .Values.ports.http.enabled }}
-              containerPort: {{ .Values.ports.http.port }}
+            {{- if .Values.ports.http }}
+              containerPort: {{ .Values.ports.http }}
             {{- else }}
               containerPort: 8080
             {{- end }}
-            {{- if .Values.ports.https.enabled }}
+            {{- if .Values.ports.https }}
             - name: https
-              containerPort: {{ .Values.ports.https.port }}
+              containerPort: {{ .Values.ports.https }}
               protocol: TCP
             {{- end }}
           {{- if .Values.health.enabled }}
