@@ -39,13 +39,13 @@ spec:
             - start
           {{- with .Values.ports }}
           args:
-          {{- if .Values.ports.http }}
+          {{- if .Values.ports.http.enabled }}
           {{- "- --http-enabled=true" | nindent 12 }}
-          {{- "- --http-port={{ .Values.ports.http }}" | nindent 12 }}
+          {{- "- --http-port={{ .Values.ports.http.port }}" | nindent 12 }}
           {{- end }}
-          {{- if .Values.ports.https }}
+          {{- if .Values.ports.https.enabled }}
           {{- "- --https-enabled=true" | nindent 12 }}
-          {{- "- --https-port={{ .Values.ports.https }}" | nindent 12 }}
+          {{- "- --https-port={{ .Values.ports.https.port }}" | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- if .Values.env }}
@@ -55,14 +55,14 @@ spec:
           ports:
             - name: http
               protocol: TCP
-            {{- if .Values.ports.http }}
-              containerPort: {{ .Values.ports.http }}
+            {{- if .Values.ports.http.enabled }}
+              containerPort: {{ .Values.ports.http.port }}
             {{- else }}
               containerPort: 8080
             {{- end }}
-            {{- if .Values.ports.https }}
+            {{- if .Values.ports.https.enabled }}
             - name: https
-              containerPort: {{ .Values.ports.https }}
+              containerPort: {{ .Values.ports.https.port }}
               protocol: TCP
             {{- end }}
           {{- if .Values.health.enabled }}
