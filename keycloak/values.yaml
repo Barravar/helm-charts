@@ -28,27 +28,27 @@ serviceAccount:
   name: ""
 
 podAnnotations: {}
-  # key: value
+#  key: value
 
 podLabels: {}
-  # key: value
+#  key: value
 
 podSecurityContext:
   fsGroup: 1000
 
 securityContext:
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
+#  capabilities:
+#    drop:
+#    - ALL
+#  readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 1000
 
 # Keycloak environment variables
 # Use ports.http (HTTP_PORT) and ports.https (HTTPS_PORT) to define custom ports
 env: []
-#   - name: KC_HOSTNAME
-#     value: keycloak.barravar.com.br
+#  - name: KC_HOSTNAME
+#    value: keycloak.barravar.com.br
 
 # Keycloak pod ports to be exposed
 ports: {}
@@ -60,12 +60,12 @@ ports: {}
 #    port: 8443
 
 resources: {}
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
 
 proxy:
   enabled: true
@@ -103,10 +103,10 @@ extraContainers: ""
 
 autoscaling:
   enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+#  minReplicas: 1
+#  maxReplicas: 100
+#  targetCPUUtilizationPercentage: 80
+#  targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}
 
@@ -146,8 +146,8 @@ ingress:
   enabled: false
   className: ""
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  #  kubernetes.io/ingress.class: nginx
+  #  kubernetes.io/tls-acme: "true"
   labels: {}
   rules: []
   #  - host: keycloak.barravar.com.br
@@ -161,9 +161,9 @@ ingress:
 
 # Secrets to be created
 secrets: {}
-  # mysecret
-  #   type: {}
-  #   annotations: {}
-  #   labels: {}
-  #   stringData: {}
-  #   data: {}
+#  mysecret:
+#    type: {}
+#    annotations: {}
+#    labels: {}
+#    stringData: {}
+#    data: {}
