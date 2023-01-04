@@ -46,7 +46,7 @@ securityContext:
 
 # Extra Keycloak environment variables
 # Use ports.http (HTTP_PORT) and ports.https (HTTPS_PORT) to define custom ports
-extraEnvs: []
+extraEnv: []
 #  - name: KC_HOSTNAME
 #    value: "keycloak.barravar.com.br"
 #  - name: KEYCLOAK_ADMIN
