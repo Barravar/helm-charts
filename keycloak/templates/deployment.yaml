@@ -37,17 +37,32 @@ spec:
           command:
             - /opt/keycloak/bin/kc.sh
             - start
+          {{- with .Values.ports }}
+          args:
+          {{- if .Values.ports.http }}
+          {{- "- --http-enabled=true" | nindent 12 }}
+          {{- "- --http-port={{ .Values.ports.http }}" | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ports.https }}
+          {{- "- --https-enabled=true" | nindent 12 }}
+          {{- "- --https-port={{ .Values.ports.https }}" | nindent 12 }}
+          {{- end }}
+          {{- end }}
           {{- if .Values.env }}
           env:
           {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
           ports:
             - name: http
-              containerPort: 8080
               protocol: TCP
-            {{- if .Values.service.httpsPort }}
+            {{- if .Values.ports.http }}
+              containerPort: {{ .Values.ports.http }}
+            {{- else }}
+              containerPort: 8080
+            {{- end }}
+            {{- if .Values.ports.https }}
             - name: https
-              containerPort: 8443
+              containerPort: {{ .Values.ports.https }}
               protocol: TCP
             {{- end }}
           {{- if .Values.health.enabled }}
