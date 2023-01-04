@@ -52,8 +52,12 @@ env: []
 
 # Keycloak pod ports to be exposed
 ports: {}
-#  http: 8080
-#  https: 8443
+#  http:
+#    enabled: true
+#    port: 8080
+#  https:
+#    enabled: false
+#    port: 8443
 
 resources: {}
   # limits:
