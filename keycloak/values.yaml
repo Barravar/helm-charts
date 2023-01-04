@@ -48,11 +48,13 @@ securityContext:
 # Use ports.http (HTTP_PORT) and ports.https (HTTPS_PORT) to define custom ports
 extraEnvs: []
 #  - name: KC_HOSTNAME
-#    value: keycloak.barravar.com.br
+#    value: "keycloak.barravar.com.br"
 #  - name: KEYCLOAK_ADMIN
-#    value: admin
+#    value: "admin"
 #  - name: KEYCLOAK_ADMIN_PASSWORD
-#    value: changeme
+#    value: "changeme"
+#  - name: KC_HTTPS_KEY_STORE_FILE
+#    value: "/usr/lib/jvm/jre/lib/security/cacerts"
 
 # Keycloak HTTP and HTTPS ports.
 # If not set, default HTTP port is exposed (8080). HTTPS port is only exposed if explicitly set.
