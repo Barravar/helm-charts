@@ -52,7 +52,7 @@ extraEnvs: []
 #  - name: KEYCLOAK_ADMIN
 #    value: admin
 #  - name: KEYCLOAK_ADMIN_PASSWORD
-#    value: password
+#    value: changeme
 
 # Keycloak HTTP and HTTPS ports.
 # If not set, default HTTP port is exposed (8080). HTTPS port is only exposed if explicitly set.
