@@ -40,13 +40,12 @@ spec:
             - start
             - --http-enabled=true
           {{- if .Values.ports.http }}
-          {{- "- --http-port={{ .Values.ports.http }}" | nindent 12 }}
+          {{- "- --http-port="{{ .Values.ports.http }} | nindent 12 }}
           {{- else }}
           {{- "- --http-port=8080 }}" | nindent 12}}
           {{- end }}
           {{- if .Values.ports.https }}
-          {{- "- --https-enabled=true" | nindent 12 }}
-          {{- "- --https-port={{ .Values.ports.https }}" | nindent 12 }}
+          {{- "- --https-port="{{ .Values.ports.https }} | nindent 12 }}
           {{- end }}
           {{- if .Values.env }}
           env:
