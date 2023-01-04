@@ -93,7 +93,7 @@
         }
       },
       "env": {
-        "type": "string"
+        "type": "array"
       },
       "extraContainers": {
         "type": "string"
