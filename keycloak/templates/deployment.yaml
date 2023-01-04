@@ -52,6 +52,8 @@ spec:
               value: "ispn"
             - name: KC_CACHE_STACK
               value: "kubernetes"
+            - name: JAVA_OPTS_APPEND
+              value: -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
           {{- if .Values.health.enabled }}
             - name: KC_HEALTH_ENABLED
               value: "true"
