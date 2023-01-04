@@ -108,7 +108,7 @@ nodeSelector: {}
 
 tolerations: []
 
-affinity: {}
+affinity: ""
 
 service:
   # Keycloak service configuration
