@@ -60,8 +60,8 @@ spec:
             - name: KC_PROXY
               value: {{ .Values.proxy.mode }}
           {{- end }}
-          {{- with .Values.extraEnv }}
-          {{- tpl . $ | nindent 12 }}
+          {{- if .Values.extraEnv }}
+          {{- toYaml .Values.extraEnv | nindent 12 }}
           {{- end }}
           ports:
             - name: http
