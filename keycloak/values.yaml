@@ -45,8 +45,7 @@ securityContext:
   runAsUser: 1000
 
 # Keycloak environment variables
-# Do not set envs HTTP_PORT and/or HTTPS_PORT. Custom port numbers are
-# defined using ports.http and/or ports.https.
+# Use ports.http (HTTP_PORT) and ports.https (HTTPS_PORT) to define custom ports
 env: []
 #   - name: KC_HOSTNAME
 #     value: keycloak.barravar.com.br
