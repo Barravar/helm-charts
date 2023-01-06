@@ -60,3 +60,16 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Reuse existing secret password. If not, generates new password.
+https://github.com/grafana/helm-charts/blob/main/charts/grafana/templates/_helpers.tpl
+*/}}
+{{- define "keycloak.password" -}}
+{{- $secret := (lookup "v1" "Secret" (.Release.Namespace) (print (include "keycloak.fullname" .) "-admin" ) ) }}
+{{- if $secret }}
+{{- index $secret "data" "password" }}
+{{- else }}
+{{- (randAlphaNum 40) | b64enc }}
+{{- end }}
+{{- end }}
