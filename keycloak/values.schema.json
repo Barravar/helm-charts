@@ -34,9 +34,37 @@
             }
           }
         }
+      },
+      "existingSecret": {
+        "type": "object",
+        "properties": {
+          "secretName": {
+            "type": "string"
+          },
+          "userKey": {
+            "type": "string"
+          },
+          "passwordKey": {
+            "type": "string"
+          }
+        }
       }
     },
     "properties": {
+      "admin": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "existingSecret": {
+            "$ref": "#/definitions/existingSecret"
+          }
+        }
+      },
       "affinity": {
         "type": "string"
       },
@@ -88,10 +116,7 @@
             "type": "string"
           },
           "existingSecret": {
-            "type": "string"
-          },
-          "existingSecretKey": {
-            "type": "string"
+            "$ref": "#/definitions/existingSecret"
           }
         }
       },
