@@ -13,18 +13,18 @@ replicaCount: 1
 image:
   repository: quay.io/keycloak/keycloak
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+# Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
 imagePullSecrets: []
 
 serviceAccount:
-  # Specifies whether a service account should be created
+# Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+# Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+# The name of the service account to use.
+# If not set and create is true, a name is generated using the fullname template
   name: ""
 
 podAnnotations: {}
@@ -52,15 +52,15 @@ extraEnv: []
 #   user: "admin"
 #   password: a random generated value
 admin:
-  # Admin username.
+# Admin username.
   user: "admin"
-  # Admin password.
-  #password: "changeme"
-  # Use an existing secret to set credentials.
-  #existingSecret: {}
-  #  secretName: 
-  #  userKey: 
-  #  passwordKey: 
+# Admin password.
+#  #password: "changeme"
+# Use an existing secret to set credentials.
+#  existingSecret: {}
+#    secretName: 
+#    userKey: 
+#    passwordKey: 
 
 # Keycloak HTTP and HTTPS ports.
 # If not set, default HTTP port is exposed (8080). HTTPS port is only exposed if explicitly set.
@@ -70,25 +70,25 @@ ports: {}
 
 # Keycloak database connection
 database:
-  # The database vendor.
-  # dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
+# The database vendor.
+# Options: dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
   vendor: "dev-file"
-  # Sets the hostname of the default JDBC URL of the chosen vendor.
-  #host: 
-  # Sets the port of the default JDBC URL of the chosen vendor.
-  #port: 
-  # Sets the database name of the default JDBC URL of the chosen vendor. 
-  #database: 
-  # The username of the database user.
-  #user: 
-  # The password of the database user.
-  #password: 
-  # Use an existing secret to set KC_DB_PASSWORD.
-  # If both database.password and database.existingSecret are defined, existingSecret is used.
-  #existingSecret: {}
-  #  secretName: 
-  #  userKey: 
-  #  passwordKey: 
+# Sets the hostname of the default JDBC URL of the chosen vendor.
+#  host: 
+# Sets the port of the default JDBC URL of the chosen vendor.
+#  port: 
+# Sets the database name of the default JDBC URL of the chosen vendor. 
+#  database: 
+# The username of the database user.
+#  user: 
+# The password of the database user.
+#  password: 
+# Use an existing secret to set KC_DB_PASSWORD.
+# If both database.password and database.existingSecret are defined, existingSecret is used.
+#  existingSecret: {}
+#    secretName: 
+#    userKey: 
+#    passwordKey: 
 
 resources: {}
 #  limits:
@@ -163,27 +163,27 @@ affinity: ""
 
 # Keycloak service configuration
 service:
-  #annotations: {}
-  #labels: {}
+#  annotations: {}
+#  labels: {}
   type: ClusterIP
   httpPort: 80
-  #httpNodePort: ""
-  #httpsPort: 8443
+#  httpNodePort: ""
+#  httpsPort: 8443
 
 # Keycloak ingress configuration
 ingress:
   enabled: false
-  #className: ""
-  #annotations: {}
-  #  kubernetes.io/ingress.class: nginx
-  #  kubernetes.io/tls-acme: "true"
-  #labels: {}
-  #rules: []
-  #  - host: keycloak.example.com
-  #    paths:
-  #      - path: /
-  #        pathType: ImplementationSpecific
-  #tls: []
-  #  - secretName: keycloak-tls
-  #    hosts:
-  #      - keycloak.example.com
+#  className: ""
+#  annotations: {}
+#    kubernetes.io/ingress.class: nginx
+#    kubernetes.io/tls-acme: "true"
+#  labels: {}
+#  rules: []
+#    - host: keycloak.example.com
+#      paths:
+#        - path: /
+#          pathType: ImplementationSpecific
+#  tls: []
+#    - secretName: keycloak-tls
+#      hosts:
+#        - keycloak.example.com
