@@ -180,7 +180,7 @@ database: {}
   # Sets the database name of the default JDBC URL of the chosen vendor. 
   #database: 
   # The username of the database user.
-  #username: 
+  #user: 
   # The password of the database user.
   #password: 
   # Use an existing secret to set KC_DB_PASSWORD.
