@@ -62,7 +62,7 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Reuse existing secret password. If not, generates new password.
+Reuse existing secret password. If none, generates new password.
 https://github.com/grafana/helm-charts/blob/main/charts/grafana/templates/_helpers.tpl
 */}}
 {{- define "keycloak.password" -}}
