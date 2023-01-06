@@ -158,9 +158,9 @@ ingress:
 
 # Keycloak initial admin credentials
 admin: {}
-  # Admin username
+  # Admin username. If not set, the default "admin" is used.
   #user: "admin"
-  # Admin password. If not set, a random value will be set.
+  # Admin password. If not set, a random value will be generated.
   #password: "changeme"
   # Use an existing secret to set credentials.
   #existingSecret: {}
