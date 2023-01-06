@@ -49,73 +49,73 @@ spec:
             - name: KC_CACHE_STACK
               value: "kubernetes"
             - name: JAVA_OPTS_APPEND
-              value: -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
+              value: {{ (print "-Djgroups.dns.query=" (include "keycloak.fullname" .) "-headless" ) | quote }}
           {{- if .Values.health.enabled }}
             - name: KC_HEALTH_ENABLED
               value: "true"
           {{- end }}
           {{- if .Values.proxy.enabled }}
             - name: KC_PROXY
-              value: {{ .Values.proxy.mode }}
+              value: {{ .Values.proxy.mode | quote }}
           {{- end }}
           {{- if .Values.database }}
           {{- if .Values.database.vendor }}
             - name: KC_DB
-              value: {{ .Values.database.vendor }}
+              value: {{ .Values.database.vendor | quote }}
           {{- end }}
           {{- if .Values.database.host }}
             - name: KC_DB_URL_HOST
-              value: {{ .Values.database.host }}
+              value: {{ .Values.database.host | quote }}
           {{- end }}
           {{- if .Values.database.port }}
             - name: KC_DB_URL_PORT
-              value: {{ .Values.database.port }}
+              value: {{ .Values.database.port | quote }}
           {{- end }}
           {{- if .Values.admin.existingSecret }}
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.admin.existingSecret.secretName }}
-                  key: {{ .Values.admin.existingSecret.userKey | default "admin"}}
+                  key: {{ .Values.admin.existingSecret.userKey | default "admin" | quote }}
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.admin.existingSecret.secretName }}
-                  key: {{ .Values.admin.existingSecret.passwordKey }}
+                  key: {{ .Values.admin.existingSecret.passwordKey | quote }}
           {{- else }}
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
                   name: {{ (printf "%s-admin" (include "keycloak.fullname" . )) }}
-                  key: user
+                  key: "user"
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ (printf "%s-admin" (include "keycloak.fullname" . )) }}
-                  key: password
+                  key: "password"
           {{- end }}
           {{- if .Values.database.existingSecret }}
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.existingSecret.secretName }}
-                  key: {{ .Values.database.existingSecret.userKey }}
+                  key: {{ .Values.database.existingSecret.userKey | quote }}
             - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.existingSecret.secretName }}
-                  key: {{ .Values.database.existingSecret.passwordKey }}
+                  key: {{ .Values.database.existingSecret.passwordKey | quote }}
           {{- else if and .Values.database.username .Values.database.password }}
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ (printf "%s-database" (include "keycloak.fullname" . )) }}
-                  key: user
+                  key: "user"
             - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ (printf "%s-database" (include "keycloak.fullname" . )) }}
-                  key: password
+                  key: "password"
           {{- end }}
           {{- end }}
           {{- if .Values.extraEnv }}
