@@ -74,24 +74,24 @@ spec:
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.admin.existingSecret | default (printf "%s-admin" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.admin.existingSecret | default "user"}}
+                  name: {{ .Values.admin.existingSecret.secretName | default (printf "%s-admin" (include "keycloak.fullname" . ))}}
+                  key: {{ .Values.admin.existingSecret.userKey | default "user"}}
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.admin.existingSecret | default (printf "%s-admin" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.admin.existingSecret | default "password"}}
+                  name: {{ .Values.admin.existingSecret.secretName | default (printf "%s-admin" (include "keycloak.fullname" . ))}}
+                  key: {{ .Values.admin.existingSecret.passwordKey | default "password"}}
           {{- if or (.Values.database.password) (.Values.database.existingSecret) }}
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.existingSecret | default (printf "%s-database" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.database.existingSecret | default "user" }}
+                  name: {{ .Values.database.existingSecret.secretName | default (printf "%s-database" (include "keycloak.fullname" . ))}}
+                  key: {{ .Values.database.existingSecret.userKey | default "user" }}
             - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.existingSecret | default (printf "%s-database" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.database.existingSecretKey | default "password" }}
+                  name: {{ .Values.database.existingSecret.secretName | default (printf "%s-database" (include "keycloak.fullname" . ))}}
+                  key: {{ .Values.database.existingSecretKey.passwordKey | default "password" }}
           {{- end }}
           {{- end }}
           {{- if .Values.extraEnv }}
