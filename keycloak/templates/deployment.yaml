@@ -62,6 +62,31 @@ spec:
             - name: KC_PROXY
               value: {{ .Values.proxy.mode }}
           {{- end }}
+          {{- if .Values.database }}
+          {{- if .Values.database.vendor }}
+            - name: KC_DB
+              value: {{ .Values.database.vendor }}
+          {{- end }}
+          {{- if .Values.database.host }}
+            - name: KC_DB_URL_HOST
+              value: {{ .Values.database.host }}
+          {{- end }}
+          {{- if .Values.database.port }}
+            - name: KC_DB_URL_PORT
+              value: {{ .Values.database.port }}
+          {{- end }}
+          {{- if .Values.database.username }}
+            - name: KC_DB_USERNAME
+              value: {{ .Values.database.username }}
+          {{- end }}
+          {{- if or (.Values.database.password) (.Values.database.existingSecret) }}
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret | default (printf "%s-db-secret" (include "keycloak.fullname" . ))}}
+                  key: {{ .Values.database.existingSecretKey | default "password" }}
+          {{- end }}
+          {{- end }}
           {{- if .Values.extraEnv }}
           {{- toYaml .Values.extraEnv | nindent 12 }}
           {{- end }}
