@@ -45,7 +45,8 @@ securityContext:
   runAsUser: 1000
 
 # Extra Keycloak environment variables
-# Use ports.http (HTTP_PORT) and ports.https (HTTPS_PORT) to define custom ports
+# Use ports.http (HTTP_PORT) and ports.https (HTTPS_PORT) to define custom ports.
+# Use database to define database connection properties.
 extraEnv: []
 #  - name: KC_HOSTNAME
 #    value: "keycloak.barravar.com.br"
@@ -170,3 +171,23 @@ secrets: {}
 #    labels: {}
 #    stringData: {}
 #    data: {}
+
+# Keycloak database connection
+database: {}
+  # The database vendor.
+  # dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
+  #vendor: "dev-file"
+  # Sets the hostname of the default JDBC URL of the chosen vendor.
+  #host: 
+  # Sets the port of the default JDBC URL of the chosen vendor.
+  #port: 
+  # Sets the database name of the default JDBC URL of the chosen vendor. 
+  #database: 
+  # The username of the database user.
+  #username: 
+  # The password of the database user.
+  #password: 
+  # Use an existing secret to set KC_DB_PASSWORD.
+  # If both database.password and database.existingSecret are defined, existingSecret is used.
+  #existingSecret: "keycloak-db-secret"
+  #existingSecretKey: "password"
