@@ -159,15 +159,6 @@ ingress:
   #    hosts:
   #      - keycloak.barravar.com.br
 
-# Secrets to be created
-secrets: {}
-#  mysecret:
-#    type: {}
-#    annotations: {}
-#    labels: {}
-#    stringData: {}
-#    data: {}
-
 # Keycloak initial admin credentials
 admin: {}
   # Admin username
