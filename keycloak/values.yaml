@@ -83,9 +83,9 @@ database:
 #  user: 
 # The password of the database user.
 #  password: 
-# Use an existing secret to set KC_DB_PASSWORD.
-# If both database.password and database.existingSecret are defined, existingSecret is used.
-#  existingSecret: {}
+# Use an existing secret to set KC_DB_USERNAME and KC_DB_PASSWORD. Values required if enabled.
+# database.existingSecret has precedence over database.user and database.password.
+#  existingSecret:
 #    secretName: 
 #    userKey: 
 #    passwordKey: 
