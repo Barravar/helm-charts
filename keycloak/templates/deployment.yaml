@@ -39,11 +39,7 @@ spec:
           args:
             - start
             - --http-enabled=true
-          {{- if .Values.ports.http }}
-            - --http-port={{ .Values.ports.http }}
-          {{- else }}
-            - --http-port=8080
-          {{- end }}
+            - --http-port={{ .Values.ports.http | default 8080 }}
           {{- if .Values.ports.https }}
             - --https-port={{ .Values.ports.https }}
           {{- end }}
@@ -103,12 +99,8 @@ spec:
           {{- end }}
           ports:
             - name: http
+              containerPort: {{ .Values.ports.http |default 8080 }}
               protocol: TCP
-            {{- if .Values.ports.http }}
-              containerPort: {{ .Values.ports.http }}
-            {{- else }}
-              containerPort: 8080
-            {{- end }}
             {{- if .Values.ports.https }}
             - name: https
               containerPort: {{ .Values.ports.https }}
