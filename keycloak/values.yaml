@@ -50,10 +50,6 @@ securityContext:
 extraEnv: []
 #  - name: KC_HOSTNAME
 #    value: "keycloak.barravar.com.br"
-#  - name: KEYCLOAK_ADMIN
-#    value: "admin"
-#  - name: KEYCLOAK_ADMIN_PASSWORD
-#    value: "changeme"
 #  - name: KC_HTTPS_KEY_STORE_FILE
 #    value: "/usr/lib/jvm/jre/lib/security/cacerts"
 
@@ -171,6 +167,18 @@ secrets: {}
 #    labels: {}
 #    stringData: {}
 #    data: {}
+
+# Keycloak initial admin credentials
+admin: {}
+  # Admin username
+  #user: "admin"
+  # Admin password. If not set, a random value will be set.
+  #password: "changeme"
+  # Use an existing secret to set credentials.
+  #existingSecret: {}
+  #  secretName: 
+  #  userKey: 
+  #  passwordKey: 
 
 # Keycloak database connection
 database: {}
