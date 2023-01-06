@@ -51,8 +51,5 @@ spec:
       {{- end }}
       protocol: TCP
       {{- end }}
-    {{- with .Values.service.extraPorts }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   selector:
     {{- include "keycloak.selectorLabels" . | nindent 4 }}
