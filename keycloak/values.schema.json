@@ -72,11 +72,14 @@
           "vendor": {
             "type": "string"
           },
-          "hostname": {
+          "host": {
             "type": "string"
           },
           "port": {
             "type": "integer"
+          },
+          "database": {
+            "type": "string"
           },
           "username": {
             "type": "string"
@@ -84,10 +87,10 @@
           "password": {
             "type": "string"
           },
-          "database": {
+          "existingSecret": {
             "type": "string"
           },
-          "existingSecret": {
+          "existingSecretKey": {
             "type": "string"
           }
         }
