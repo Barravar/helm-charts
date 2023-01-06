@@ -37,6 +37,10 @@
       },
       "existingSecret": {
         "type": "object",
+        "required": [
+          "secretName",
+          "passwordKey"
+        ],
         "properties": {
           "secretName": {
             "type": "string"
