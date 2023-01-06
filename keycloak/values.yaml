@@ -30,9 +30,6 @@ serviceAccount:
 podAnnotations: {}
 #  key: value
 
-podLabels: {}
-#  key: value
-
 podSecurityContext:
   fsGroup: 1000
 
