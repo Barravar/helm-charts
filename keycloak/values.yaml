@@ -197,5 +197,7 @@ database: {}
   #password: 
   # Use an existing secret to set KC_DB_PASSWORD.
   # If both database.password and database.existingSecret are defined, existingSecret is used.
-  #existingSecret: "keycloak-db-secret"
-  #existingSecretKey: "password"
+  #existingSecret: {}
+  #  secretName: 
+  #  userKey: 
+  #  passwordKey: 
