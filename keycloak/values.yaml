@@ -56,7 +56,7 @@ admin:
   user: "admin"
 # Admin password.
 #  #password: "changeme"
-# Use an existing secret to set credentials.
+# Use an existing secret to set credentials. If userKey is not set, the default username is used.
 #  existingSecret: {}
 #    secretName: 
 #    userKey: 

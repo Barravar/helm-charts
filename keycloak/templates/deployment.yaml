@@ -71,27 +71,51 @@ spec:
             - name: KC_DB_URL_PORT
               value: {{ .Values.database.port }}
           {{- end }}
+          {{- if .Values.admin.existingSecret }}
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.admin.existingSecret.secretName | default (printf "%s-admin" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.admin.existingSecret.userKey | default "user"}}
+                  name: {{ .Values.admin.existingSecret.secretName }}
+                  key: {{ .Values.admin.existingSecret.userKey | default "admin"}}
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.admin.existingSecret.secretName | default (printf "%s-admin" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.admin.existingSecret.passwordKey | default "password"}}
-          {{- if or (.Values.database.password) (.Values.database.existingSecret) }}
+                  name: {{ .Values.admin.existingSecret.secretName }}
+                  key: {{ .Values.admin.existingSecret.passwordKey }}
+          {{- else }}
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-admin" (include "keycloak.fullname" . )) }}
+                  key: user
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-admin" (include "keycloak.fullname" . )) }}
+                  key: password
+          {{- end }}
+          {{- if .Values.database.existingSecret }}
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.existingSecret.secretName | default (printf "%s-database" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.database.existingSecret.userKey | default "user" }}
+                  name: {{ .Values.database.existingSecret.secretName }}
+                  key: {{ .Values.database.existingSecret.userKey }}
             - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.existingSecret.secretName | default (printf "%s-database" (include "keycloak.fullname" . ))}}
-                  key: {{ .Values.database.existingSecretKey.passwordKey | default "password" }}
+                  name: {{ .Values.database.existingSecret.secretName }}
+                  key: {{ .Values.database.existingSecret.passwordKey }}
+          {{- else if and .Values.database.username .Values.database.password }}
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-database" (include "keycloak.fullname" . )) }}
+                  key: user
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-database" (include "keycloak.fullname" . )) }}
+                  key: password
           {{- end }}
           {{- end }}
           {{- if .Values.extraEnv }}
