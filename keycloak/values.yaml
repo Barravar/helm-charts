@@ -156,11 +156,13 @@ ingress:
   #    hosts:
   #      - keycloak.barravar.com.br
 
-# Keycloak initial admin credentials
+# Keycloak initial admin credentials. If not set, the following defaults are used:
+#   user: "admin"
+#   password: a random generated value
 admin: {}
-  # Admin username. If not set, the default "admin" is used.
+  # Admin username.
   #user: "admin"
-  # Admin password. If not set, a random value will be generated.
+  # Admin password.
   #password: "changeme"
   # Use an existing secret to set credentials.
   #existingSecret: {}

@@ -75,7 +75,6 @@ spec:
             - name: KC_DB_URL_PORT
               value: {{ .Values.database.port }}
           {{- end }}
-          {{- if or (.Values.admin.password) (.Values.admin.existingSecret) }}
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
@@ -86,7 +85,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.admin.existingSecret | default (printf "%s-admin" (include "keycloak.fullname" . ))}}
                   key: {{ .Values.admin.existingSecret | default "password"}}
-          {{- end }}
           {{- if or (.Values.database.password) (.Values.database.existingSecret) }}
             - name: KC_DB_USERNAME
               valueFrom:
