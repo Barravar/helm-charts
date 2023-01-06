@@ -46,7 +46,7 @@ securityContext:
 # Use database to define database connection properties.
 extraEnv: []
 #  - name: KC_HOSTNAME
-#    value: "keycloak.barravar.com.br"
+#    value: "keycloak.example.com"
 #  - name: KC_HTTPS_KEY_STORE_FILE
 #    value: "/usr/lib/jvm/jre/lib/security/cacerts"
 
@@ -70,7 +70,6 @@ proxy:
 
 health:
   enabled: true
-
   startupProbe: |
     httpGet:
       path: /health
@@ -79,14 +78,12 @@ health:
     timeoutSeconds: 1
     failureThreshold: 60
     periodSeconds: 5
-
   readinessProbe: |
     httpGet:
       path: /health/ready
       port: http
     initialDelaySeconds: 30
     timeoutSeconds: 1
-
   livenessProbe: |
     httpGet:
       path: /health/live
@@ -132,36 +129,36 @@ affinity: ""
 
 service:
   # Keycloak service configuration
-  annotations: {}
-  labels: {}
+  #annotations: {}
+  #labels: {}
   type: ClusterIP
   httpPort: 80
-  httpNodePort: ""
-  httpsPort: 8443
+  #httpNodePort: ""
+  #httpsPort: 8443
 
 ingress:
   enabled: false
-  className: ""
-  annotations: {}
+  #className: ""
+  #annotations: {}
   #  kubernetes.io/ingress.class: nginx
   #  kubernetes.io/tls-acme: "true"
-  labels: {}
-  rules: []
-  #  - host: keycloak.barravar.com.br
+  #labels: {}
+  #rules: []
+  #  - host: keycloak.example.com
   #    paths:
   #      - path: /
   #        pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: keycloak-barravar-tls
+  #tls: []
+  #  - secretName: keycloak-tls
   #    hosts:
-  #      - keycloak.barravar.com.br
+  #      - keycloak.example.com
 
 # Keycloak initial admin credentials. If not set, the following defaults are used:
 #   user: "admin"
 #   password: a random generated value
-admin: {}
+admin:
   # Admin username.
-  #user: "admin"
+  user: "admin"
   # Admin password.
   #password: "changeme"
   # Use an existing secret to set credentials.
@@ -171,10 +168,10 @@ admin: {}
   #  passwordKey: 
 
 # Keycloak database connection
-database: {}
+database:
   # The database vendor.
   # dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
-  #vendor: "dev-file"
+  vendor: "dev-file"
   # Sets the hostname of the default JDBC URL of the chosen vendor.
   #host: 
   # Sets the port of the default JDBC URL of the chosen vendor.
