@@ -70,6 +70,6 @@ https://github.com/grafana/helm-charts/blob/main/charts/grafana/templates/_helpe
 {{- if $secret }}
 {{- index $secret "data" "password" }}
 {{- else }}
-{{- (randAlphaNum 40) | b64enc }}
+{{- .Values.admin.password | default (randAlphaNum 40) | b64enc }}
 {{- end }}
 {{- end }}
