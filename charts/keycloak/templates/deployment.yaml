@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "keycloak.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "keycloak.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "keycloak.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /opt/keycloak/bin/kc.sh
+          args:
+            - start
+            - --http-enabled=true
+            - --http-port={{ .Values.ports.http | default 8080 }}
+          {{- if .Values.ports.https }}
+            - --https-port={{ .Values.ports.https }}
+          {{- end }}
+          env:
+            - name: KC_CACHE
+              value: "ispn"
+            - name: KC_CACHE_STACK
+              value: "kubernetes"
+            - name: JAVA_OPTS_APPEND
+              value: {{ (print "-Djgroups.dns.query=" (include "keycloak.fullname" .) "-headless" ) | quote }}
+          {{- if .Values.health.enabled }}
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+          {{- end }}
+          {{- if .Values.proxy.enabled }}
+            - name: KC_PROXY
+              value: {{ .Values.proxy.mode | quote }}
+          {{- end }}
+          {{- if .Values.database }}
+          {{- if .Values.database.vendor }}
+            - name: KC_DB
+              value: {{ .Values.database.vendor | quote }}
+          {{- end }}
+          {{- if .Values.database.host }}
+            - name: KC_DB_URL_HOST
+              value: {{ .Values.database.host | quote }}
+          {{- end }}
+          {{- if .Values.database.port }}
+            - name: KC_DB_URL_PORT
+              value: {{ .Values.database.port | quote }}
+          {{- end }}
+          {{- if .Values.database.database }}
+            - name: KC_DB_URL_DATABASE
+              value: {{ .Values.database.database |quote }}
+          {{- end }}
+          {{- if .Values.database.existingSecret }}
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret.secretName }}
+                  key: {{ .Values.database.existingSecret.userKey | quote }}
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret.secretName }}
+                  key: {{ .Values.database.existingSecret.passwordKey | quote }}
+          {{- else if and .Values.database.username .Values.database.password }}
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-database" (include "keycloak.fullname" . )) }}
+                  key: "user"
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-database" (include "keycloak.fullname" . )) }}
+                  key: "password"
+          {{- end }}
+          {{- end }}
+          {{- if .Values.admin.existingSecret }}
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.admin.existingSecret.secretName }}
+                  key: {{ .Values.admin.existingSecret.userKey | default "admin" | quote }}
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.admin.existingSecret.secretName }}
+                  key: {{ .Values.admin.existingSecret.passwordKey | quote }}
+          {{- else }}
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-admin" (include "keycloak.fullname" . )) }}
+                  key: "user"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (printf "%s-admin" (include "keycloak.fullname" . )) }}
+                  key: "password"
+          {{- end }}
+          {{- if .Values.extraEnv }}
+          {{- toYaml .Values.extraEnv | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.ports.http |default 8080 }}
+              protocol: TCP
+            {{- if .Values.ports.https }}
+            - name: https
+              containerPort: {{ .Values.ports.https }}
+              protocol: TCP
+            {{- end }}
+          {{- if .Values.health.enabled }}
+          {{- with .Values.health.startupProbe }}
+          startupProbe:
+          {{- tpl . $ | nindent 12 }}
+          {{- end }}
+          {{- with .Values.health.livenessProbe }}
+          livenessProbe:
+          {{- tpl . $ | nindent 12 }}
+          {{- end }}
+          {{- with .Values.health.readinessProbe }}
+          readinessProbe:
+          {{- tpl . $ | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

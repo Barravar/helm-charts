@@ -1,0 +1,51 @@
+1. Get your Keycloak admin user credentials by running:{{"\n"}}
+
+  {{- if .Values.admin.existingSecret }}
+   kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.admin.existingSecret.secretName }} -o jsonpath="{.data.{{ .Values.admin.existingSecret.passwordKey }}}" | base64 --decode ; echo
+  {{- else }}
+   kubectl get secret --namespace {{ .Release.Namespace }} {{ include "keycloak.fullname" . }}-admin -o jsonpath="{.data.password}" | base64 --decode ; echo
+  {{- end }}
+
+2. The Keycloak server can be accessed via HTTP port {{ .Values.ports.http | default 8080 }} on the following DNS name from within your cluster:
+
+   {{ include "keycloak.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}
+  {{ if .Values.ingress.enabled }}
+   From outside the cluster, you can reach to the following URL(s):{{"\n"}}
+
+  {{- range $host := .Values.ingress.rules }}
+  {{- range .paths }}
+   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+  {{- end }}
+  {{- else }}
+   Get the Keycloak URL by running these commands:{{"\n"}}
+
+  {{- if contains "NodePort" .Values.service.type }}
+     export NODE_PORT=$(kubectl get svc --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" {{ include "keycloak.fullname" . }})
+     export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+     echo http://$NODE_IP:$NODE_PORT
+  {{- else if contains "LoadBalancer" .Values.service.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status by running 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ include "keycloak.fullname" . }}'
+
+     export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "keycloak.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+     {{- if .Values.service.httpPort }}
+     http://$SERVICE_IP:{{ .Values.service.httpPort }}
+     {{- end }}
+     {{- if .Values.service.httpsPort }}
+     https://$SERVICE_IP:{{ .Values.service.httpsPort }}
+     {{- end }}
+  {{- else if contains "ClusterIP" .Values.service.type }}
+     export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "keycloak.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+     kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME {{ .Values.ports.http | default 8080 }}
+  {{- end }}
+{{- end }}
+
+3. Login to Keycloak using the password from step 1 and username: {{ .Values.admin.user | default "admin" }}{{"\n"}}
+
+{{- if or (not .Values.database) (contains "dev-mem" .Values.database.vendor) (contains "dev-file" .Values.database.vendor) }}
+#################################################################################
+######   WARNING: No external database defined!!! You will lose your data   #####
+######            when the Keycloak pod is terminated.                      #####
+#################################################################################
+{{- end }}

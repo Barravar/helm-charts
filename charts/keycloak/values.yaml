@@ -1,0 +1,206 @@
+# Default values for keycloak.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# The internal Kubernetes cluster domain
+clusterDomain: "cluster.local"
+
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  repository: quay.io/keycloak/keycloak
+  pullPolicy: IfNotPresent
+# Overrides the image tag whose default is the chart appVersion.
+  tag: 
+
+imagePullSecrets: []
+
+serviceAccount:
+# Specifies whether a service account should be created
+  create: true
+# Annotations to add to the service account
+  annotations: {}
+# The name of the service account to use.
+# If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+#  key: value
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Extra Keycloak environment variables
+extraEnv: []
+#  - name: KC_HOSTNAME
+#    value: "keycloak.example.local"
+
+# Keycloak initial admin credentials. If not set, the following defaults are used:
+#   user: "admin"
+#   password: a random generated value
+admin:
+# Admin username.
+  user: "admin"
+# Admin password.
+#  #password: "changeme"
+# Use an existing secret to set credentials. If userKey is not set, the default username is used.
+#  existingSecret: {}
+#    secretName: 
+#    userKey: 
+#    passwordKey: 
+
+# Keycloak HTTP and HTTPS ports.
+# If not set, default HTTP port is exposed (8080). HTTPS port is only exposed if explicitly set.
+ports: {}
+#  http: 8080
+#  https: 8443
+
+# Keycloak database connection
+database:
+# The database vendor.
+# Options: dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
+  vendor: "dev-file"
+# Sets the hostname of the default JDBC URL of the chosen vendor.
+#  host: 
+# Sets the port of the default JDBC URL of the chosen vendor.
+#  port: 
+# Sets the database name of the default JDBC URL of the chosen vendor. 
+#  database: 
+# The username of the database user.
+#  user: 
+# The password of the database user.
+#  password: 
+# Use an existing secret to set KC_DB_USERNAME and KC_DB_PASSWORD. Values required if enabled.
+# database.existingSecret has precedence over database.user and database.password.
+#  existingSecret:
+#    secretName: 
+#    userKey: 
+#    passwordKey: 
+
+resources: {}
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+
+proxy:
+  enabled: true
+  mode: edge
+
+health:
+  enabled: true
+  startupProbe: |
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    timeoutSeconds: 1
+    failureThreshold: 60
+    periodSeconds: 5
+  readinessProbe: |
+    httpGet:
+      path: /health/ready
+      port: http
+    initialDelaySeconds: 30
+    timeoutSeconds: 1
+  livenessProbe: |
+    httpGet:
+      path: /health/live
+      port: http
+    initialDelaySeconds: 0
+    timeoutSeconds: 5
+
+extraInitContainers: ""
+
+extraContainers: ""
+
+autoscaling:
+  enabled: false
+#  minReplicas: 1
+#  maxReplicas: 100
+#  targetCPUUtilizationPercentage: 80
+#  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+# Pod affinity/anti-affinity
+affinity: ""
+# affinity: |
+#   nodeAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: topology.kubernetes.io/zone
+#           operator: In
+#           values:
+#           - antarctica-east1
+#           - antarctica-west1
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 1
+#       preference:
+#         matchExpressions:
+#         - key: another-node-label-key
+#           operator: In
+#           values:
+#           - another-node-label-value
+
+# Keycloak service configuration
+service:
+  annotations: {}
+  labels: {}
+  type: ClusterIP
+  httpPort: 80
+#  httpNodePort: ""
+#  httpsPort: 8443
+
+# Keycloak certificate (requires cert-manager)
+certificate:
+  enabled: false
+#  secretName: "keycloak-tls"
+#  domain: "keycloak.example.local"
+#  additionalHosts: []
+#  duration: ""
+#  renewBefore: ""
+#  issuer:
+#    group: ""
+#    kind: ""
+#    name: ""
+#  privateKey:
+#    rotationPolicy: Never
+#    encoding: PKCS8
+#    algorithm: RSA
+#    size: 2048
+#  annotations: {}
+#  usages: []
+
+# Keycloak ingress configuration
+ingress:
+  enabled: false
+#  className: "nginx"
+#  annotations:
+#    kubernetes.io/tls-acme: "true"
+#  labels: {}
+#  rules:
+#    - host: keycloak.example.local
+#      paths:
+#        - path: /
+#          pathType: ImplementationSpecific
+#  tls:
+#    - secretName: keycloak-tls
+#      hosts:
+#        - keycloak.example.local
