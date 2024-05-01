@@ -98,7 +98,8 @@ resources: {}
 
 proxy:
   enabled: true
-  mode: edge
+  # available modes: forwarded (default), xforwarded
+  # mode: forwarded
 
 health:
   enabled: true

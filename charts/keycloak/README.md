@@ -84,7 +84,7 @@ helm install keycloak barravar/keycloak -f values.yaml
 | `ports` | Keycloak HTTP and HTTPS ports. If not set, default HTTP port is set; HTTPS is only exposed if explicitly set. | {} |
 | `ports.http` | Keycloak service HTTP port number. | 8080 |
 | `ports.https` | Keycloak service HTTPS port number. | "" |
-| `proxy` | Keycloak proxy mode. Sets KC_PROXY environment variable. | {"enabled": true, "mode": "edge"} |
+| `proxy` | Keycloak proxy headers that should be accepted by the server. Sets KC_PROXY_HEADERS environment variable. | {"enabled": true, "mode": "forwarded"} |
 | `replicaCount` | Number of Keycloak pod replicas. | 1 |
 | `resources` | Pod resource requests and limits. | {} |
 | `securityContext` | Keycloak container security context. | {"capabilities": {"drop": ["ALL"]}, "readOnlyRootFilesystem": true, "runAsNonRoot": true, "runAsUser": 1000} |
