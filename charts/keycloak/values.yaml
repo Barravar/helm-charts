@@ -13,18 +13,18 @@ replicaCount: 1
 image:
   repository: quay.io/keycloak/keycloak
   pullPolicy: IfNotPresent
-# Overrides the image tag whose default is the chart appVersion.
+  # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
 imagePullSecrets: []
 
 serviceAccount:
-# Specifies whether a service account should be created
+  # Specifies whether a service account should be created
   create: true
-# Annotations to add to the service account
+  # Annotations to add to the service account
   annotations: {}
-# The name of the service account to use.
-# If not set and create is true, a name is generated using the fullname template
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
   name: ""
 
 podAnnotations: {}
@@ -33,28 +33,28 @@ podAnnotations: {}
 podSecurityContext:
   fsGroup: 1000
 
-securityContext:
-  capabilities:
-    drop:
-    - ALL
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 1000
+securityContext: {}
+#  capabilities:
+#    drop:
+#    - ALL
+#  readOnlyRootFilesystem: true
+#  runAsNonRoot: true
+#  runAsUser: 1000
 
 # Extra Keycloak environment variables
 extraEnv: []
 #  - name: KC_HOSTNAME
-#    value: "keycloak.example.local"
+#    value: keycloak.example.local
+#  - name: KC_HOSTNAME_ADMIN_URL
+#    value: https://keycloak.example.local
 
 # Keycloak initial admin credentials. If not set, the following defaults are used:
 #   user: "admin"
 #   password: a random generated value
-admin:
-# Admin username.
-  user: "admin"
-# Admin password.
-#  #password: "changeme"
-# Use an existing secret to set credentials. If userKey is not set, the default username is used.
+admin: {}
+#  user: "admin"
+#  password: "changeme"
+# Use an existing secret to set credentials. If userKey is not set, the default username (admin) is used.
 #  existingSecret: {}
 #    secretName: 
 #    userKey: 
@@ -68,25 +68,25 @@ ports: {}
 
 # Keycloak database connection
 database:
-# The database vendor.
-# Options: dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
+  # The database vendor. Available options: dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
   vendor: "dev-file"
-# Sets the hostname of the default JDBC URL of the chosen vendor.
-#  host: 
-# Sets the port of the default JDBC URL of the chosen vendor.
-#  port: 
-# Sets the database name of the default JDBC URL of the chosen vendor. 
-#  database: 
-# The username of the database user.
-#  user: 
-# The password of the database user.
-#  password: 
-# Use an existing secret to set KC_DB_USERNAME and KC_DB_PASSWORD. Values required if enabled.
-# database.existingSecret has precedence over database.user and database.password.
-#  existingSecret:
-#    secretName: 
-#    userKey: 
-#    passwordKey: 
+  # Sets the hostname of the default JDBC URL of the chosen vendor.
+  # host: 
+  # Sets the port of the default JDBC URL of the chosen vendor.
+  # port: 
+  # Sets the database name of the default JDBC URL of the chosen vendor. 
+  # database: 
+  # The username of the database user.
+  # user: 
+  # The password of the database user.
+  # password: 
+
+  # Use an existing secret to set KC_DB_USERNAME and KC_DB_PASSWORD. Values required if enabled.
+  # database.existingSecret has precedence over database.user and database.password.
+  #  existingSecret:
+  #    secretName: 
+  #    userKey: 
+  #    passwordKey: 
 
 resources: {}
 #  limits:
@@ -98,7 +98,7 @@ resources: {}
 
 proxy:
   enabled: true
-  # available modes: forwarded (default), xforwarded
+  # Available modes: forwarded (default), xforwarded
   # mode: forwarded
 
 health:
@@ -166,8 +166,8 @@ service:
   labels: {}
   type: ClusterIP
   httpPort: 80
+#  httpsPort: 443
 #  httpNodePort: ""
-#  httpsPort: 8443
 
 # Keycloak certificate (requires cert-manager)
 certificate:
