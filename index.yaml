@@ -3,6 +3,30 @@ entries:
   keycloak:
   - apiVersion: v2
     appVersion: 24.0.3
+    created: "2024-05-01T09:52:26.289400845Z"
+    description: Keycloak Open Source Identity and Access Management
+    digest: 5b62be8c202ead8a1c8256f1bb4954f773c5171806be707a348a291a7e5a2e07
+    home: https://www.keycloak.org/
+    icon: https://www.keycloak.org/resources/images/icon.svg
+    keywords:
+    - sso
+    - openid
+    - saml
+    - kerberos
+    - ldap
+    maintainers:
+    - email: lauro@barravar.com.br
+      name: lauro
+    name: keycloak
+    sources:
+    - https://github.com/barravar/helm-charts
+    - https://github.com/codecentric/helm-charts
+    type: application
+    urls:
+    - https://github.com/Barravar/helm-charts/releases/download/keycloak-1.0.2/keycloak-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    appVersion: 24.0.3
     created: "2024-04-22T16:35:55.377236971Z"
     description: Keycloak Open Source Identity and Access Management
     digest: d39ea705c6cf8145665a4a37238c7212c8450a49989da29c00d60d4f64253918
@@ -82,4 +106,4 @@ entries:
     urls:
     - https://github.com/Barravar/helm-charts/releases/download/postgresql-0.1.0/postgresql-0.1.0.tgz
     version: 0.1.0
-generated: "2024-04-22T16:35:55.377271311Z"
+generated: "2024-05-01T09:52:26.289416113Z"
