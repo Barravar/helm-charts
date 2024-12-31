@@ -1,0 +1,144 @@
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: {{ include "knativeapps.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  {{- with .Values.additionalAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "knativeapps.labels" . | nindent 4 }}
+    {{- include "knativeapps.service_visibility" . | nindent 4 }}
+    {{- with .Values.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  template:
+    metadata:
+      annotations:
+        {{- include "knativeapps.autoScaling" . | indent 8  }}
+        {{- if .Values.disableGc }}
+        serving.knative.dev/no-gc: "true"
+        {{- end }}
+        releaseTimestamp: {{ now | date "2006-01-02_15.04.05" }}
+        {{- with .Values.kservice.annotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "knativeapps.labels" . | nindent 8 }}
+        {{- include "knativeapps.selectorLabels" . | nindent 8 }}
+        {{- with .Values.kservice.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containerConcurrency: {{ default 0 .Values.autoscaling.concurrencyLimit }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "knativeapps.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ template "knativeapps.name" . }}
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: K8S_HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: K8S_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}{{ if .Values.image.tag }}:{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.kservice.port.name | default "http1" }}
+              containerPort: {{ .Values.kservice.port.containerPort | default 80 }}
+              protocol: {{ .Values.kservice.port.protocol | default "TCP" }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- if or (.Values.affinity.podAntiAffinity.enabled) (.Values.affinity.nodeAffinity.enabled) }}
+      affinity:
+        {{- if .Values.affinity.podAntiAffinity.enabled }}
+        podAntiAffinity:
+          {{- if eq .Values.affinity.podAntiAffinity.type "preferred" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: {{ .Values.affinity.podAntiAffinity.preferredWeight }}
+            podAffinityterm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/release
+                  operator: In
+                  values:
+                  - "{{ .Release.Name }}"
+              topologyKey: kubernetes.io/hostname
+          {{- else }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/release
+                operator: In
+                values:
+                - "{{ .Release.Name }}"
+          {{- end }}
+        {{- end }}
+
+        {{- if .Values.affinity.nodeAffinity.enabled }}
+        nodeAffinity:
+          {{- if eq .Values.affinity.nodeAffinity.type "preferred" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+          {{- range $.Values.affinity.nodeAffinity.matchExpressions }}
+          - {{ toYaml . | nindent 12 | trim }}
+          {{- end }}
+          {{- else if eq .Values.affinity.nodeAffinity.type "required" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            {{- range $.Values.affinity.nodeAffinity.nodeSelectorTerms }}
+            - {{ toYaml . | nindent 14 | trim }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

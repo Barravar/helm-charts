@@ -1,0 +1,27 @@
+{{- if .Values.serviceMonitor.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "knativeapps.fullname" . }}-metrics
+  namespace: {{ .Release.Namespace }}
+  {{- with .Values.additionalAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "knativeapps.labels" . | nindent 4 }}
+    {{- with .Values.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    monitoring.barravar.dev.br/service-monitor: {{ include "knativeapps.name" . }}-metrics
+spec:
+  ports:
+    - name: "metrics"
+      port: {{ .Values.serviceMonitor.port }}
+      protocol: "TCP"
+      targetPort: {{ .Values.serviceMonitor.port }}
+  selector:
+    {{- include "knativeapps.selectorLabels" . | nindent 4 }}
+    serving.knative.dev/service: {{ include "knativeapps.fullname" . }}
+  type: ClusterIP
+{{- end -}}
