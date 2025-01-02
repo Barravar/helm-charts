@@ -76,10 +76,12 @@ spec:
             - name: {{ .Values.kservice.port.name | default "http1" }}
               containerPort: {{ .Values.kservice.port.containerPort | default 80 }}
               protocol: {{ .Values.kservice.port.protocol | default "TCP" }}
+          {{- if .Values.probes.enabled }}
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.probes.liveness | nindent 12 }}
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            {{- toYaml .Values.probes.readiness | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.volumeMounts }}
