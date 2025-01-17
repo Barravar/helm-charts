@@ -121,23 +121,6 @@ entries:
     urls:
     - https://github.com/Barravar/helm-charts/releases/download/keycloak-1.0.0/keycloak-1.0.0.tgz
     version: 1.0.0
-  knativeapps:
-  - apiVersion: v2
-    created: "2024-12-31T18:03:59.449113267Z"
-    description: A Helm chart for deploying Barravar Knative apps
-    digest: 0f89c4c0f420eb8a3998d73084566519d05bd278dd42290991e11d26a2e4d6bb
-    keywords:
-    - knative
-    - kubernetes
-    - serverless
-    maintainers:
-    - email: lauro@barravar.com.br
-      name: Lauro Dias
-    name: knativeapps
-    type: application
-    urls:
-    - https://github.com/Barravar/helm-charts/releases/download/knativeapps-0.1.0/knativeapps-0.1.0.tgz
-    version: 0.1.0
   mariadb:
   - apiVersion: v2
     appVersion: 1.16.0
