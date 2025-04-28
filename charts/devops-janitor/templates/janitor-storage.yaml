@@ -1,0 +1,46 @@
+{{- range $cronjob := .Values.jobs }}
+{{- $JanitorStore := false }}
+{{- if hasKey $cronjob "name" }}
+  {{- $jobName := $cronjob.name }}
+  {{ $jobFile := $.Files.Get (printf "janitor-jobs/%s" $jobName) | fromYaml }}
+  {{ $cronjob := mergeOverwrite (deepCopy $jobFile) (deepCopy $cronjob) }}
+
+  {{- if (($cronjob).janitorStorage).enabled }}
+    {{- $JanitorStore = true }}
+  {{- else }}
+    {{- range $taskName,$task := $cronjob.tasks }}
+    {{- if (($task).janitorStorage).enabled }}
+      {{- $JanitorStore = true }}                   
+    {{- end }}
+    {{- end }}
+  {{- end }}
+
+  {{- if $JanitorStore }}                
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: janitor-storage-{{ $cronjob.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    baseChart: {{ template "base_chart" $ }}
+    release: {{ $.Release.Name }}
+    {{- include "sstk_cronjob.business_labels" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.labels }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}
+  annotations:
+    {{- include "sstk_cronjob.business_annotations" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.annotations }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}  
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 5Gi         
+  {{- end }}
+  {{- end }}  
+{{- end }}

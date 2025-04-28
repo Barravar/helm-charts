@@ -1,0 +1,82 @@
+{{- range $cronjob := .Values.jobs }}
+{{- if hasKey $cronjob "name" }}
+  {{- $jobName := $cronjob.name }}
+  {{ $jobFile := $.Files.Get (printf "janitor-jobs/%s" $jobName) | fromYaml }}
+  {{ $cronjob := mergeOverwrite (deepCopy $jobFile) (deepCopy $cronjob) }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+{{- if and ($cronjob.rbac) (($cronjob.rbac).namespace)  }}
+kind: Role
+{{- else }}
+kind: ClusterRole
+{{- end }}
+metadata:
+  name: {{ printf "cloud-devops-devops-janitor-%s" $cronjob.name }}
+  {{- if and ($cronjob.rbac) ($cronjob.rbac.namespace) (ne $cronjob.rbac.namespace "") }}
+  namespace: {{ $cronjob.rbac.namespace }}
+  {{- else }}
+  namespace: {{ $.Release.Namespace }}
+  {{- end}}
+  labels:
+    baseChart: {{ template "base_chart" $ }} 
+    release: {{ $.Release.Name }}
+    {{- include "sstk_cronjob.business_labels" $ | indent 4 }}
+    {{- range $key, $value := ($cronjob).labels }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}
+  annotations:
+    {{- include "sstk_cronjob.business_annotations" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.annotations }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}    
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "pods", "namespaces"]
+    verbs: ["get", "watch", "list"]
+  {{- range $rule := ($cronjob.rbac).rules }}
+  {{ $rule | toYaml | indent 4 | trim | cat "-" }}
+  {{- end}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+{{- if (($cronjob).rbac).namespace }}
+kind: RoleBinding
+{{- else }}
+kind: ClusterRoleBinding
+{{- end }}
+metadata:
+  name: {{ printf "cloud-devops-devops-janitor-%s" $cronjob.name }}     
+  {{- if and ($cronjob.rbac) ($cronjob.rbac.namespace) (ne $cronjob.rbac.namespace "") }}
+  namespace: {{ $cronjob.rbac.namespace }}
+  {{- else }}
+  namespace: {{ $.Release.Namespace }}
+  {{- end}}
+  labels:
+    baseChart: {{ template "base_chart" $ }} 
+    release: {{ $.Release.Name }}
+    {{- include "sstk_cronjob.business_labels" $ | indent 4 }}
+    {{- range $key, $value := ($cronjob).labels }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}
+  annotations:
+    {{- include "sstk_cronjob.business_annotations" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.annotations }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}    
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  {{- if (($cronjob).serviceAccount).name }}
+  name: {{ $cronjob.serviceAccount.name }}
+  {{- else }}
+  name: {{ printf "cloud-devops-devops-janitor-%s" $cronjob.name }}          
+  {{- end }}
+subjects:
+  - kind: ServiceAccount
+    {{- if (($cronjob).serviceAccount).name }}
+    name: {{ $cronjob.serviceAccount.name }}
+    {{- else }}
+    name: {{ printf "cloud-devops-devops-janitor-%s" $cronjob.name }}          
+    {{- end }}
+    namespace: {{ $.Release.Namespace }}
+{{- end }}
+{{- end }}  

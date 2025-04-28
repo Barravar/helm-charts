@@ -1,0 +1,59 @@
+{{- range $cronjob := .Values.jobs }}
+{{- if hasKey $cronjob "name" }}
+  {{- $jobName := $cronjob.name }}
+  {{ $jobFile := $.Files.Get (printf "janitor-jobs/%s" $jobName) | fromYaml }}
+  {{ $cronjob := mergeOverwrite (deepCopy $jobFile) (deepCopy $cronjob) }}
+  {{- if (($cronjob).janitorVPA).enabled }}
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: {{ printf "%s-vpa" $cronjob.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    baseChart: {{ template "base_chart" $ }}
+    release: {{ $.Release.Name }}
+    {{- include "sstk_cronjob.business_labels" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.labels }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}
+  annotations:
+    {{- include "sstk_cronjob.business_annotations" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.annotations }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}
+spec:
+  resourcePolicy:
+    containerPolicies:
+    {{- if or (not $cronjob.janitorVPA.containerList) (has "all" ($cronjob.janitorVPA.containerList)) }}
+      {{- range $containerName,$containers := $cronjob.tasks }}
+    - containerName: {{ $containerName }}
+      {{- if $cronjob.janitorVPA.managedResources }}
+      controlledResources: {{ $cronjob.janitorVPA.managedResources }}
+      {{- else }}
+      controlledResources: ['mem','cpu']
+      {{- end }}
+      controlledValues: RequestsOnly
+      {{- end }}
+    {{- else }}
+      {{- range $containerName,$containers := $cronjob.tasks }}
+      {{- if (has $containerName $cronjob.janitorVPA.containerList) }}
+    - containerName: {{ $containerName }}
+      {{- if $cronjob.janitorVPA.managedResources }}
+      controlledResources: {{ $cronjob.janitorVPA.managedResources }}
+      {{- else }}
+      controlledResources: ['mem','cpu']
+      {{- end }}
+      controlledValues: RequestsOnly
+      {{- end }}
+      {{- end }}      
+    {{- end }}
+  targetRef:
+    apiVersion: batch/v1
+    kind: CronJob
+    name: {{ printf "janitor-job-%s" $cronjob.name }}
+  updatePolicy:
+    updateMode: Auto
+  {{- end }}
+{{- end }}
+{{- end }}

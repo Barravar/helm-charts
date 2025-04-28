@@ -1,0 +1,18 @@
+{{- range $cronjob := .Values.jobs }}
+{{- if hasKey $cronjob "name" }}
+  {{- $jobName := $cronjob.name }}
+  {{ $jobFile := $.Files.Get (printf "janitor-jobs/%s" $jobName) | fromYaml }}
+  {{ $cronjob := mergeOverwrite (deepCopy $jobFile) (deepCopy $cronjob) }}
+  {{- if (hasKey $jobFile "extraObjects") }}
+    {{- range $jobFile.extraObjects }}
+---
+{{ tpl (toYaml .) $ }}
+    {{- end }}
+  {{- else if (hasKey $cronjob "extraObjects") }}
+    {{- range $cronjob.extraObjects }}
+---
+{{ tpl (toYaml .) $ }}
+    {{- end }}  
+  {{- end }}
+{{- end }}
+{{- end }}

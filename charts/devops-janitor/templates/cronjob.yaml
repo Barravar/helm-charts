@@ -1,0 +1,395 @@
+{{- range $cronjob := .Values.jobs }}
+{{- if hasKey $cronjob "name" }}
+  {{- $jobName := $cronjob.name }}
+  {{ $jobFile := $.Files.Get (printf "janitor-jobs/%s" $jobName) | fromYaml }}
+  {{ $cronjob := mergeOverwrite (deepCopy $jobFile) (deepCopy $cronjob) }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ required "You need to give each Janitor job (CronJob) a name." (printf "janitor-job-%s" $cronjob.name) }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    baseChart: {{ template "base_chart" $ }}
+    release: {{ $.Release.Name }}
+    {{- include "sstk_cronjob.business_labels" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.labels }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}
+  annotations:
+    {{- include "sstk_cronjob.business_annotations" $ | indent 4 }}
+    {{- range $key, $value := $cronjob.annotations }}
+    {{ $key | quote }}: {{ $value | quote }}
+    {{- end}}
+spec:
+  schedule: {{ required "You need to give each Janitor job a schedule." (quote $cronjob.schedule) }}
+  concurrencyPolicy: {{ $cronjob.concurrencyPolicy | default $.Values.global.jobDefaults.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ $cronjob.successfulJobsHistoryLimit | default $.Values.global.jobDefaults.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ $cronjob.failedJobsHistoryLimit | default $.Values.global.jobDefaults.failedJobsHistoryLimit }}
+  {{- if $cronjob.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ $cronjob.startingDeadlineSeconds }}
+  {{- end }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- range $key, $value := $cronjob.labels }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end}}
+      annotations:
+      {{- if ($cronjob.vaultIntegration).enable }}
+        pod.boostport.com/vault-approle: {{ $cronjob.vaultIntegration.appRoleName }}
+        pod.boostport.com/vault-init-container: install
+      {{- end }}
+        {{- range $key, $value := $cronjob.annotations }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end}}  
+    spec:
+      {{- if $cronjob.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ $cronjob.activeDeadlineSeconds }}
+      {{- end }}
+      backoffLimit: {{ $cronjob.backoffLimit | default $.Values.global.jobDefaults.backoffLimit }}
+      template:
+        metadata:
+          labels:
+            {{- range $key, $value := $cronjob.labels }}
+            {{ $key | quote }}: {{ $value | quote }}
+            {{- end}}
+          annotations:
+          {{- if ($cronjob.vaultIntegration).enable }}
+            pod.boostport.com/vault-approle: {{ $cronjob.vaultIntegration.appRoleName }}
+            pod.boostport.com/vault-init-container: install
+          {{- end }}
+            {{- range $key, $value := $cronjob.annotations }}
+            {{ $key | quote }}: {{ $value | quote }}
+            {{- end}}  
+        spec:   
+          {{- if (($cronjob).serviceAccount).name }}
+          serviceAccountName: {{ $cronjob.serviceAccount.name }}
+          {{- else }}
+          serviceAccountName: {{ printf "cloud-devops-devops-janitor-%s" $cronjob.name }}          
+          {{- end }}
+          initContainers:
+          - name: tunables
+            image: 378905551400.dkr.ecr.us-east-1.amazonaws.com/busybox:1.35.0
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              privileged: true
+            command: [ 'sh', '-c', 'sysctl -w  net.ipv4.tcp_tw_reuse=1 && sysctl -w net.ipv4.tcp_slow_start_after_idle=0 && sysctl -w net.ipv4.tcp_max_syn_backlog=4096' ]
+          {{- if ($cronjob.vaultIntegration).enable }}
+          - name: "install"
+            image: 378905551400.dkr.ecr.us-east-1.amazonaws.com/kic/kubernetes-vault-init:v0.7.0-multiarch
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: "VAULT_ROLE_ID"
+              value: "{{ $cronjob.vaultIntegration.appRoleId }}"
+            - name: "CREDENTIALS_PATH"
+              value: {{ $cronjob.vaultIntegration.tokenPath | default "/var/run/secrets/vault" | quote }}
+            volumeMounts:
+            - name: "{{ $.Release.Name }}-vault-token"
+              mountPath: {{ $cronjob.vaultIntegration.tokenPath | default "/var/run/secrets/vault" }}
+          {{- end }}
+          containers:
+          {{- if and (empty $cronjob.tasks) (empty $jobFile.tasks) }}
+            {{- $defaultTask := dict $cronjob.name nil }}
+            {{- $_ := set $cronjob "tasks" ($defaultTask) }}
+          {{- end }}
+          {{- range  $sidecarName, $sidecar := $cronjob.tasks }}
+          - name: {{ $sidecarName | quote }}
+            image: {{ ($sidecar).image | default $.Values.global.image }}:{{ ($sidecar).tag | default $.Values.global.tag }}
+            imagePullPolicy: {{ ($sidecar).pullPolicy | default $.Values.global.pullPolicy }}
+            {{- if and 
+              (not (($sidecar).command)) 
+              (not (($sidecar).args)) 
+              (not (($sidecar).entrypoint)) 
+              (mustRegexMatch "^[A-Za-z0-9._%+-]+$" ($sidecarName | toYaml)) 
+            }}
+            command: [{{ printf "/scripts/%s/%s.sh" $cronjob.name $sidecarName | quote }}]
+            {{- else if (hasKey $sidecar "command") }}
+            command: [{{ $sidecar.command | quote }}]
+            {{- if (hasKey $sidecar "args") }}
+            args:
+              {{- range $sidecar.args }}
+              - {{ . | quote }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+
+            {{- if or (($cronjob).envFrom) (($sidecar).envFrom) }}
+            envFrom:
+            {{- range $envFromName, $envFrom := $cronjob.envFrom }}
+            {{- if eq $envFrom.type "secret" }}
+            - secretRef:
+                name: {{ $envFromName | quote }}
+                {{- if $envFrom.optional }}
+                optional: true
+                {{- else }}
+                optional: false
+                {{- end }}
+              {{- if $envFrom.prefix }}
+              prefix: {{ $envFrom.prefix }}
+              {{- end }}  
+            {{- else }}
+            - configMapRef:
+                name: {{ $envFromName | quote }}
+                {{- if $envFrom.optional }}
+                optional: true
+                {{- else }}
+                optional: false
+                {{- end }}
+              {{- if $envFrom.prefix }}
+              prefix: {{ $envFrom.prefix | quote }}
+              {{- end }}                  
+            {{- end }}
+            {{- end }}
+
+            {{- range $envFromName, $envFrom := ($sidecar).envFrom }}
+            {{- if eq $envFrom.type "secret" }}
+            - secretRef:
+                name: {{ $envFromName | quote }}
+                {{- if $envFrom.optional }}
+                optional: true
+                {{- else }}
+                optional: false
+                {{- end }}
+              {{- if $envFrom.prefix }}
+              prefix: {{ $envFrom.prefix }}
+              {{- end }}  
+            {{- else }}
+            - configMapRef:
+                name: {{ $envFromName | quote }}
+                {{- if $envFrom.optional }}
+                optional: true
+                {{- else }}
+                optional: false
+                {{- end }}
+              {{- if $envFrom.prefix }}
+              prefix: {{ $envFrom.prefix | quote }}
+              {{- end }}                  
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            env:
+            {{- if $.Values.global.envValues }}
+            - name: ENV_VALUES
+              value: {{ $.Values.global.envValues }}
+            {{- end }}
+            {{- if ($sidecar).iamRole }}
+            - name: IAM_ROLE
+              value: {{ $sidecar.iamRole | quote }}
+            {{- else if $cronjob.iamRole }}
+            - name: IAM_ROLE
+              value: {{ $cronjob.iamRole | quote }}            
+            {{- end }}
+
+            {{- if ($cronjob).env }}
+            {{- range $envName, $env := $cronjob.env }}
+            - name: {{ $envName | quote }}
+              {{- if $env.value }}
+              value: {{ $env.value | quote }}
+              {{- else }}
+              valueFrom:
+                {{- if eq $env.type "secret" }}
+                secretKeyRef:
+                  name: {{ $env.name | quote }}
+                  key: {{ $env.key | quote }}
+                  {{- if $env.optional }}
+                  optional: true
+                  {{- else }}
+                  optional: false
+                  {{- end }}
+                {{- else }}
+                configMapKeyRef:
+                  name: {{ $env.name | quote }}
+                  key: {{ $env.key | quote }}
+                  {{- if $env.optional }}
+                  optional: true
+                  {{- else }}
+                  optional: false
+                  {{- end }}
+                {{- end }}
+              {{- end }}                
+            {{- end }}
+            {{- end }}
+
+            {{- if ($sidecar).env }}
+            {{- range $envName, $env := $sidecar.env }}
+            - name: {{ $envName | quote }}
+              {{- if $env.value }}
+              value: {{ $env.value | quote }}
+              {{- else }}
+              valueFrom:
+                {{- if eq $env.type "secret" }}
+                secretKeyRef:
+                  name: {{ $env.name | quote }}
+                  key: {{ $env.key | quote }}
+                  {{- if $env.optional }}
+                  optional: true
+                  {{- else }}
+                  optional: false
+                  {{- end }}
+                {{- else }}
+                configMapKeyRef:
+                  name: {{ $env.name | quote }}
+                  key: {{ $env.key | quote }}
+                  {{- if $env.optional }}
+                  optional: true
+                  {{- else }}
+                  optional: false
+                  {{- end }}
+                {{- end }}
+              {{- end }}                
+            {{- end }}
+            {{- end }}    
+
+            {{- range $key, $value := ($cronjob).envVars }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}                             
+            {{- range $key, $value := ($sidecar).envVars }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if ($cronjob.vaultIntegration).enable }}
+            - name: VAULT_TOKEN_PATH
+              value: {{ $cronjob.vaultIntegration.tokenPath }}/vault-token
+            - name: VAULT_APPROLE_NAME
+              value: {{ $cronjob.vaultIntegration.appRoleName }}
+            {{- end }}
+
+            volumeMounts:
+            {{- if ($cronjob.vaultIntegration).enable }}
+            - name: "{{ $.Release.Name }}-vault-token"
+              mountPath: "{{ $cronjob.vaultIntegration.tokenPath }}"
+            {{- end }}
+
+            {{- if ($cronjob.janitorStorage).enabled }}
+            - name: "janitor-store-{{ $cronjob.name }}"
+              mountPath: {{ $cronjob.janitorStorage.mountPath | default "/srv/JanitorStorage" }}
+            {{- else if (($sidecar).janitorStorage).enabled }}
+            - name: "janitor-store-{{ $cronjob.name }}"
+              mountPath: {{ $sidecar.janitorStorage.mountPath | default "/srv/JanitorStorage" }}            
+            {{- end }}
+
+            {{- range $pvcVolumeName,$pvc := ($cronjob).persistentVolumeClaimMounts }}
+            - name: {{ $pvcVolumeName }}
+              mountPath: {{ $pvc.mountPath }}
+              readOnly: {{ $pvc.readOnly | default false }}
+            {{- end }}
+            {{- range $pvcVolumeName,$pvc := ($sidecar).persistentVolumeClaimMounts }}    
+            - name: {{ $pvcVolumeName }}
+              mountPath: {{ $pvc.mountPath }}
+              readOnly: {{ $pvc.readOnly | default false }}
+            {{- end }}                
+
+            {{- range $configMapVolumeName,$configMapVolume := ($cronjob).configMapMounts }}
+            - name: {{ $configMapVolumeName }}
+              mountPath: {{ $configMapVolume.mountPath | quote }}
+              readOnly: true
+            {{- end }}    
+            {{- range $configMapVolumeName,$configMapVolume := ($sidecar).configMapMounts }}
+            - name: {{ $configMapVolumeName }}
+              mountPath: {{ $configMapVolume.mountPath | quote }}
+              readOnly: true
+            {{- end }}     
+
+            {{- range $secretVolumeName,$secretVolume := ($cronjob).secretMounts }}
+            - name: {{ $secretVolumeName }}
+              mountPath: {{ $secretVolume.mountPath | quote }}
+              readOnly: true
+            {{- end }}    
+            {{- range $secretVolumeName,$secretVolume := ($sidecar).secretMounts }}
+            - name: {{ $secretVolumeName }}
+              mountPath: {{ $secretVolume.mountPath | quote }}
+              readOnly: true
+            {{- end }}   
+
+            {{- if ($sidecar).resources }}
+            resources:
+              {{ toYaml $sidecar.resources | indent 14 | trim }}
+            {{- else if $cronjob.resources }}
+            resources:            
+              {{ toYaml $cronjob.resources | indent 14 | trim }}
+            {{- end}}
+          {{- end }}
+          restartPolicy: {{ ($cronjob.pod).restartPolicy | default $.Values.global.jobDefaults.pod.restartPolicy | quote }}
+          volumes:
+            {{- if ($cronjob.vaultIntegration).enable }}
+            - name: {{ $.Release.Name }}-vault-token
+              emptyDir: {}
+            {{- end }}
+
+            {{- $taskJanitorStore := false }}
+            {{- if ($cronjob.janitorStorage).enabled }}
+              {{- $taskJanitorStore = true}}    
+            {{- else }}
+              {{- range $taskName,$task := $cronjob.tasks }}
+                {{- if (($task).janitorStorage).enabled }}
+                  {{- $taskJanitorStore = true}}                   
+                {{- end }}
+              {{- end }}
+            {{- end }}
+            {{- if $taskJanitorStore }}                
+            - name: {{ printf "janitor-store-%s" $cronjob.name }}
+              persistentVolumeClaim:
+                claimName: janitor-storage-{{ $cronjob.name }}       
+            {{- end }}       
+
+            {{- range $secretVolumeName,$secret := ($cronjob).secretMounts }}
+            - name: {{ $secretVolumeName }}
+              secret:
+                secretName: {{ $secret.secretName }}
+            {{- end }}
+            {{- range $taskName,$task := $cronjob.tasks }}
+            {{- range $secretVolumeName,$secret := ($task).secretMounts }}
+            - name: {{ $secretVolumeName }}
+              secret:
+                secretName: {{ $secret.secretName }}
+            {{- end }}     
+            {{- end }}   
+
+            {{- range $configMapVolumeName,$configMap := ($cronjob).configMapMounts }}
+            - name: {{ $configMapVolumeName }}
+              configMap:
+                name: {{ $configMap.configMapName }}
+            {{- end }}
+            {{- range $taskName,$task := $cronjob.tasks }}
+            {{- range $configMapVolumeName,$configMap := ($task).configMapMounts }}
+            - name: {{ $configMapVolumeName }}
+              configMap:
+                name: {{ $configMap.configMapName }}
+            {{- end }}     
+            {{- end }}          
+           
+            {{- range $pvcVolumeName,$pvc := ($cronjob).persistentVolumeClaimMounts }}
+            - name: {{ $pvcVolumeName }}
+              persistentVolumeClaim:
+                claimName: {{ $pvc.pvcName | default $pvcVolumeName }}
+                readOnly: {{ $pvc.readOnly | default false }}
+            {{- end }}
+            {{- range $taskName,$task := $cronjob.tasks }}
+            {{- range $pvcVolumeName,$pvc := ($task).persistentVolumeClaimMounts }}
+            - name: {{ $pvcVolumeName }}
+              persistentVolumeClaim:
+                claimName: {{ $pvc.pvcName | default $pvcVolumeName }}
+                readOnly: {{ $pvc.readOnly | default false }}
+            {{- end }}     
+            {{- end }}             
+          tolerations:
+          {{- if $cronjob.tolerations -}}          
+          {{- toYaml $cronjob.tolerations | nindent 12 }}
+          {{- else }}
+          {{- toYaml $.Values.global.jobDefaults.tolerations | nindent 12 }}          
+          {{- end }}
+          nodeSelector:
+          {{- if $cronjob.nodeSelector -}}          
+          {{- toYaml $cronjob.nodeSelector | nindent 12 }}
+          {{- else }}
+          {{- toYaml $.Values.global.jobDefaults.nodeSelector | nindent 12 }}          
+          {{- end }}
+          dnsConfig:
+            options:
+            - name: ndots
+              value: {{ ( ((($cronjob.pod).dnsConfig).options).ndots | default $.Values.global.jobDefaults.pod.dnsConfig.options.ndots) | quote }}
+
+{{- end }}
+{{- end }}
