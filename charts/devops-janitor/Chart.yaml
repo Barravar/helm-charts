@@ -5,5 +5,5 @@ kubeVersion: ">= v1.22.0-0"
 maintainers:
   - name: "Cloud DevOps Team"
 type: application
-version: 1.2.0
+version: 1.2.1
 appVersion: 1.2.0
