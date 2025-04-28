@@ -1,5 +1,19 @@
 apiVersion: v1
 entries:
+  devops-janitor:
+  - apiVersion: v2
+    appVersion: 1.2.0
+    created: "2025-04-28T14:49:05.203783058Z"
+    description: Helm chart for DevOps workflows
+    digest: 91654a7c3b680cdc1654c0907e48667bda5c847d2780e48d6855d09423d5e4f1
+    kubeVersion: '>= v1.22.0-0'
+    maintainers:
+    - name: Cloud DevOps Team
+    name: devops-janitor
+    type: application
+    urls:
+    - https://github.com/Barravar/helm-charts/releases/download/devops-janitor-1.2.0/devops-janitor-1.2.0.tgz
+    version: 1.2.0
   keycloak:
   - apiVersion: v2
     appVersion: 24.0.3
@@ -154,4 +168,4 @@ entries:
     urls:
     - https://github.com/Barravar/helm-charts/releases/download/postgresql-0.1.0/postgresql-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-31T18:03:59.44913651Z"
+generated: "2025-04-28T14:49:05.203801592Z"
