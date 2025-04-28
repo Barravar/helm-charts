@@ -64,17 +64,6 @@ environment: {{ .Values.global.meta.environment | quote }} # The pipeline should
 {{- end -}}
 
 {{- define "sstk_cronjob.base_role" }}
-{{-   if $.Values.global.envValues }}
-"eks.amazonaws.com/role-arn": "arn:aws:iam::{{ $.Values.global.envValues.accountId }}:role/{{ $.Values.global.envValues.roleName }}"
-{{-   else }}
-{{-     if eq $.Values.global.meta.environment "dev" }}
-"eks.amazonaws.com/role-arn" : "arn:aws:iam::118033459220:role/base-devops-janitor-dev"
-{{-     else if eq $.Values.global.meta.environment "qa" }}
-"eks.amazonaws.com/role-arn" : "arn:aws:iam::706957196015:role/base-devops-janitor-qa"
-{{-     else if eq $.Values.global.meta.environment "prod" }}
-"eks.amazonaws.com/role-arn" : "arn:aws:iam::711314306963:role/base-devops-janitor-prod"
-{{-     else if eq $.Values.global.meta.environment "ops" }}
-"eks.amazonaws.com/role-arn" : "arn:aws:iam::564032534737:role/base-devops-janitor-ops"
-{{-     end }}
+"eks.amazonaws.com/role-arn": "arn:aws:iam::{{ $.Values.global.envValues.cluster.awsAccount }}:role/base-devops-janitor-{{ $.Values.global.envValues.cluster.environment }}"
 {{-   end }}
 {{- end }}
