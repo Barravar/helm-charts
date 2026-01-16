@@ -132,6 +132,26 @@ entries:
     urls:
     - https://github.com/Barravar/helm-charts/releases/download/mariadb-0.1.0/mariadb-0.1.0.tgz
     version: 0.1.0
+  mongodb:
+  - apiVersion: v2
+    appVersion: 8.2.2
+    created: "2026-01-16T13:19:41.519812789Z"
+    description: A Helm chart for deploying MongoDB Community ReplicaSet via the MongoDB
+      Kubernetes Operator
+    digest: bc61d4ba92fa7b16eeddd19938bd90265e5ecd8cb9db3def0be0e326e55c6150
+    home: https://github.com/mongodb/mongodb-kubernetes/tree/master/docs/mongodbcommunity
+    icon: https://www.mongodb.com/assets/images/global/favicon.ico
+    keywords:
+    - mongodb
+    - kubernetes
+    - operator
+    - database
+    - helm
+    name: mongodb
+    type: application
+    urls:
+    - https://github.com/Barravar/helm-charts/releases/download/mongodb-1.0.0/mongodb-1.0.0.tgz
+    version: 1.0.0
   postgresql:
   - apiVersion: v2
     appVersion: 1.16.0
@@ -154,4 +174,4 @@ entries:
     urls:
     - https://github.com/Barravar/helm-charts/releases/download/postgresql-0.1.0/postgresql-0.1.0.tgz
     version: 0.1.0
-generated: "2025-04-28T14:57:50.129123237Z"
+generated: "2026-01-16T13:19:41.519832927Z"
