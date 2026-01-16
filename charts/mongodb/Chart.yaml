@@ -2,7 +2,7 @@ apiVersion: v2
 name: mongodb
 description: A Helm chart for deploying MongoDB Community ReplicaSet via the MongoDB Kubernetes Operator
 home: https://github.com/mongodb/mongodb-kubernetes/tree/master/docs/mongodbcommunity
-icon: https://www.mongodb.com/assets/images/global/favicon.ico
+icon: https://mongodb-images-new.s3.eu-west-1.amazonaws.com/leaf-green-dark.png
 keywords:
   - mongodb
   - kubernetes
