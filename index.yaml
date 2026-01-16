@@ -135,6 +135,25 @@ entries:
   mongodb:
   - apiVersion: v2
     appVersion: 8.2.2
+    created: "2026-01-16T19:08:02.236337664Z"
+    description: A Helm chart for deploying MongoDB Community ReplicaSet via the MongoDB
+      Kubernetes Operator
+    digest: f9409e28e9549ac0058486b5be911d9cf3b09a79ea3cddab866680b40e9a84bd
+    home: https://github.com/mongodb/mongodb-kubernetes/tree/master/docs/mongodbcommunity
+    icon: https://mongodb-images-new.s3.eu-west-1.amazonaws.com/leaf-green-dark.png
+    keywords:
+    - mongodb
+    - kubernetes
+    - operator
+    - database
+    - helm
+    name: mongodb
+    type: application
+    urls:
+    - https://github.com/Barravar/helm-charts/releases/download/mongodb-1.0.1/mongodb-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 8.2.2
     created: "2026-01-16T13:19:41.519812789Z"
     description: A Helm chart for deploying MongoDB Community ReplicaSet via the MongoDB
       Kubernetes Operator
@@ -174,4 +193,4 @@ entries:
     urls:
     - https://github.com/Barravar/helm-charts/releases/download/postgresql-0.1.0/postgresql-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-16T13:19:41.519832927Z"
+generated: "2026-01-16T19:08:02.236358652Z"
