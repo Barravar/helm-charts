@@ -1,0 +1,199 @@
+{{- $rsName := .Values.mongodb.replicaset.name | default (include "mongodb.fullname" .) -}}
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: {{ include "mongodb.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: 
+    {{- include "mongodb.labels" . | nindent 4 }}
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: ReplicaSet
+  members: {{ .Values.mongodb.replicaset.members }}
+  arbiters: {{ .Values.mongodb.replicaset.arbiters }}
+  version: {{ .Values.mongodb.version | default .Chart.AppVersion }}
+  {{- if .Values.mongodb.compatibilityVersion }}
+  featureCompatibilityVersion: {{ .Values.mongodb.compatibilityVersion | quote }}
+  {{- end }}
+  automationConfig:
+    replicaSet:
+      id: {{ $rsName }}
+      {{- with .Values.mongodb.automationConfig.replicaSet }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+    {{- with .Values.mongodb.automationConfig.processes }}
+    processes:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  additionalMongodConfig:
+    replication:
+      replSetName: {{ $rsName }}
+    {{- with .Values.mongodb.config }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.mongodb.connectionStringOptions }}
+  additionalConnectionStringConfig:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.mongodb.replicaset.memberConfig }}
+  memberConfig:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.agent.config }}
+  agent:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .Values.mongodb.externalAccess.enabled }}
+  replicaSetHorizons:
+    {{- range $memberId := until (int .Values.mongodb.replicaset.members) }}
+    - internal: {{ printf "%s-%d.%s.%s.svc.%s:%d" (include "mongodb.fullname" $) $memberId $.Release.Name $.Release.Namespace $.Values.clusterDomain (int $.Values.mongodb.externalAccess.ports.servicePort) }}
+      external: {{ printf "%s-%d.%s:%d" (include "mongodb.fullname" $) $memberId $.Values.mongodb.externalAccess.domain (int $.Values.mongodb.externalAccess.ports.servicePort) }}
+    {{- end }}
+  {{- end }}
+  security:
+    authentication:
+      modes: {{ toJson .Values.mongodb.auth.modes }}
+    tls:
+      enabled: {{ .Values.mongodb.tls.enabled }}
+      {{- if .Values.mongodb.tls.enabled }}
+      optional: {{ eq .Values.mongodb.tls.mode "optional" }}
+      certificateKeySecretRef:
+        name: {{ .Values.mongodb.tls.certificateSecret | default (printf "%s-certificate-tls" (include "mongodb.fullname" .)) }}
+      caCertificateSecretRef:
+        name: {{ .Values.mongodb.tls.caCertificateSecret | default (printf "%s-self-signed-ca-tls" (include "mongodb.fullname" .)) }}
+      {{- end }}
+    {{- with .Values.mongodb.roles }}
+    roles:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  statefulSet:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "mongodb.name" . | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+      {{- with .Values.commonAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "mongodb.selectorLabels" . | nindent 12 }}
+        spec:
+          serviceAccountName: {{ include "mongodb.serviceAccountName" . }}
+          containers:
+            {{- $nameMap := dict "mongodb" "mongod" "agent" "mongodb-agent" }}
+            {{- range $component := list "mongodb" "agent" }}
+            {{- $config := index $.Values $component }}
+            - name: {{ index $nameMap $component }}
+              {{- with index $.Values $component "resources" }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with index $.Values $component "securityContext" }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with index $.Values $component "extraVolumeMounts" }}
+              volumeMounts:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with index $.Values $component "extraEnvVars" }}
+              env:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          {{- end }}
+          {{- with .Values.initContainers }}
+          initContainers:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.extraVolumes }}
+          volumes:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $persistence := .Values.persistence }}
+      persistentVolumeClaimRetentionPolicy:
+        whenDeleted: {{ $persistence.retentionPolicy | default "Retain" | quote }}
+        whenScaled: {{ $persistence.retentionPolicy | default "Retain" | quote }}
+      volumeClaimTemplates:
+        {{- range $volume := list "data" "logs" }}
+        - metadata:
+            name: {{ $volume }}-volume
+          spec:
+            {{- if $persistence.storageClass }}
+            storageClassName: {{ $persistence.storageClass | quote }}
+            {{- end }}
+            {{- if $persistence.accessModes }}
+            accessModes: {{ toJson $persistence.accessModes }}
+            {{- end }}
+            {{- with index $persistence.size $volume }}
+            resources:
+              requests:
+                storage: {{ . }}
+            {{- end }}
+        {{- end }}
+      {{- end }}
+  users:
+    - name: {{ .Values.mongodb.auth.adminUsername }}
+      db: admin
+      passwordSecretRef:
+        name: {{ include "mongodb.authSecretName" . }}
+        key: {{ .Values.mongodb.auth.existingSecret.adminPasswordKey | default "mongodb-admin-password" }}
+      roles:
+        - db: admin
+          name: clusterAdmin
+        - db: admin
+          name: userAdminAnyDatabase
+        - db: config
+          name: readWrite
+      {{- if has "SCRAM" .Values.mongodb.auth.modes }}
+      scramCredentialsSecretName: {{ include "mongodb.authSecretName" . }}
+      {{- end }}
+    {{- range .Values.mongodb.users }}
+    - name: {{ .name }}
+      db: {{ default "admin" .db }}
+      {{- if .passwordSecretRef }}
+      passwordSecretRef:
+        name: {{ .passwordSecretRef.name }}
+        key: {{ .passwordSecretRef.key }}
+      {{- end }}
+      roles:
+        {{- toYaml .roles | nindent 8 }}
+      {{- if has "SCRAM" $.Values.mongodb.auth.modes }}
+      scramCredentialsSecretName: {{ .passwordSecretRef.name }}
+      {{- end }}
+      {{- if .additionalConnectionStringConfig }}
+      additionalConnectionStringConfig:
+        {{- toYaml .additionalConnectionStringConfig | nindent 8 }}
+      {{- end }}
+      {{- if .connectionStringSecretName }}
+      connectionStringSecretName: {{ .connectionStringSecretName }}
+      {{- end }}
+      {{- if .connectionStringSecretNamespace }}
+      connectionStringSecretNamespace: {{ .connectionStringSecretNamespace }}
+      {{- end }}
+    {{- end }}

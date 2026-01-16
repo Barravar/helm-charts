@@ -1,0 +1,30 @@
+{{- if and .Values.mongodb.tls.enabled .Values.mongodb.tls.certManager.enabled }}
+{{- range .Values.mongodb.users }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .name }}-x509-tls
+  namespace: {{ $.Release.Namespace }}
+spec:
+  commonName: {{ .name }}
+  secretName: {{ .name }}-x509-tls
+  issuerRef:
+    name: {{ include "mongodb.fullname" $ }}-ca-issuer
+    kind: Issuer
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  duration: {{ $.Values.mongodb.tls.certManager.duration }}
+  renewBefore: {{ $.Values.mongodb.tls.certManager.renewBefore }}
+  subject:
+    organizations:
+      - {{ include "mongodb.fullname" $ }}
+    organizationalUnits:
+      - {{ $.Release.Namespace }}
+  usages:
+    - digital signature
+    - client auth
+{{- end }}
+{{- end }}

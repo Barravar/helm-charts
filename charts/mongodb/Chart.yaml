@@ -1,0 +1,14 @@
+apiVersion: v2
+name: mongodb
+description: A Helm chart for deploying MongoDB Community ReplicaSet via the MongoDB Kubernetes Operator
+home: https://github.com/mongodb/mongodb-kubernetes/tree/master/docs/mongodbcommunity
+icon: https://www.mongodb.com/assets/images/global/favicon.ico
+keywords:
+  - mongodb
+  - kubernetes
+  - operator
+  - database
+  - helm
+type: application
+version: 1.0.0
+appVersion: "8.2.2"

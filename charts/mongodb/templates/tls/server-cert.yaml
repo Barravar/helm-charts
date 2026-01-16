@@ -1,0 +1,26 @@
+{{- if and .Values.mongodb.tls.enabled .Values.mongodb.tls.certManager.enabled }}
+{{- $commonName := (printf "*.%s-svc.%s.svc.%s" (include "mongodb.fullname" .) .Release.Namespace .Values.clusterDomain) }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "mongodb.fullname" . }}-certificate-tls
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: {{ include "mongodb.fullname" . }}-certificate-tls
+  issuerRef:
+    name: {{ include "mongodb.fullname" . }}-ca-issuer
+    kind: Issuer
+  duration: {{ .Values.mongodb.tls.certManager.duration }}
+  renewBefore: {{ .Values.mongodb.tls.certManager.renewBefore }}
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  commonName: {{ $commonName | quote }}
+  dnsNames:
+    - {{ $commonName | quote }}
+    {{- range .Values.mongodb.tls.certManager.dnsNames }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}

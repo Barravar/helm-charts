@@ -1,0 +1,571 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema#",
+  "type": "object",
+  "title": "MongoDB Chart Values Schema",
+  "description": "Schema for validating values.yaml in the MongoDB Helm chart",
+  "$defs": {
+    "resources": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": ["string", "number"],
+          "description": "CPU request",
+          "if": {
+            "type": "number"
+          },
+          "then": {
+            "minimum": 0.001
+          },
+          "else": {
+            "pattern": "(^[1-9]([0-9]+)?m)|^[0-9]+((\\.[0-9]+)|e[0-9]+)?$"
+          }
+        },
+        "memory": {
+          "type": "string",
+          "description": "Memory request",
+          "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|Ki|E|P|T|G|M|k)$"
+        }
+      }
+    }
+  },
+  "properties": {
+    "nameOverride": {
+      "type": "string",
+      "description": "Partially override the names of the resources created by this chart - affects mongodb.name template"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Fully override the names of the resources created by this chart - affects mongodb.name template"
+    },
+    "namespaceOverride": {
+      "type": "string",
+      "description": "Override the namespace where resources will be deployed"
+    },
+    "clusterDomain": {
+      "type": "string",
+      "description": "Kubernetes cluster domain",
+      "default": "cluster.local"
+    },
+    "commonLabels": {
+      "type": "object",
+      "description": "Common labels to be added to all resources"
+    },
+    "commonAnnotations": {
+      "type": "object",
+      "description": "Common annotations to be added to all resources"
+    },
+    "serviceAccount": {
+      "type": "object",
+      "description": "Service Account configuration",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Whether to create a Service Account",
+          "default": true
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the Service Account"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations to add to the Service Account"
+        }
+      }
+    },
+    "mongodb": {
+      "type": "object",
+      "description": "MongoDB specific configuration",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "MongoDB version to deploy"
+        },
+        "compatibilityVersion": {
+          "type": "string",
+          "description": "MongoDB compatibility version",
+          "pattern": "^[5-8]\\.0$"
+        },
+        "replicaset": {
+          "type": "object",
+          "description": "Replica set configuration",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the replica set"
+            },
+            "members": {
+              "type": "integer",
+              "description": "Number of members in the replica set",
+              "minimum": 1
+            },
+            "arbiters": {
+              "type": "integer",
+              "description": "Number of arbiters in the replica set",
+              "default": 0
+            },
+            "memberConfig": {
+              "type": "array",
+              "description": "Configuration for each member of the replica set"
+            }
+          }
+        },
+        "config": {
+          "type": "object",
+          "description": "Additional MongoDB configuration options"
+        },
+        "automationConfig": {
+          "type": "object",
+          "description": "MongoDB Automation configuration"
+        },
+        "connectionStringOptions": {
+          "type": "object",
+          "description": "Options for the MongoDB connection string"
+        },
+        "auth": {
+          "type": "object",
+          "description": "Authentication configuration",
+          "properties": {
+            "modes": {
+              "type": "array",
+              "description": "Authentication modes to enable",
+              "items": {
+                "type": "string",
+                "enum": ["SCRAM", "SCRAM-SHA-256", "SCRAM-SHA-1", "X509"],
+                "default": "SCRAM"
+              }
+            },
+            "adminUsername": {
+              "type": "string",
+              "description": "Admin username for MongoDB",
+              "default": "admin"
+            },
+            "adminPassword": {
+              "type": "string",
+              "description": "Admin password for MongoDB",
+              "validation": {
+                "if": {
+                  "field": "existingSecret",
+                  "is": {}
+                },
+                "then": {
+                  "required": true,
+                  "message": "adminPassword must be set if existingSecret is not provided"
+                }
+              }
+            },
+            "existingSecret": {
+              "type": "object",
+              "description": "Reference to an existing secret for admin credentials",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the existing secret",
+                  "validation": {
+                    "required": true,
+                    "message": "name is required in existingSecret"
+                  }
+                },
+                "adminPasswordKey": {
+                  "type": "string",
+                  "description": "Key in the secret that holds the admin password",
+                  "validation": {
+                    "required": true,
+                    "message": "adminPasswordKey is required in existingSecret"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tls": {
+          "type": "object",
+          "description": "TLS configuration for client-server and server-server communication",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable TLS for MongoDB servers",
+              "default": false
+            },
+            "mode": {
+              "type": "string",
+              "description": "TLS mode for client connections",
+              "enum": ["optional", "required"],
+              "default": "optional"
+            },
+            "caCertificateSecret": {
+              "type": "string",
+              "description": "Name of the secret containing the CA certificate",
+              "validation": {
+                "if": {
+                  "field": "enabled",
+                  "is": true,
+                  "and": {
+                    "field": "certManager.enabled",
+                    "is": false
+                  }
+                },
+                "then": {
+                  "required": true,
+                  "message": "caCertificateSecret must be set if TLS is enabled and no self-signed certificates are used"
+                }
+              }
+            },
+            "certificateSecret": {
+              "type": "string",
+              "description": "Name of the secret containing the TLS certificate and key",
+              "validation": {
+                "if": {
+                  "field": "enabled",
+                  "is": true,
+                  "and": {
+                    "field": "certManager.enabled",
+                    "is": false
+                  }
+                },
+                "then": {
+                  "required": true,
+                  "message": "certificateSecret must be set if TLS is enabled and no self-signed certificates are used"
+                }
+              }
+            },
+            "certManager": {
+              "type": "object",
+              "description": "cert-manager configuration for TLS certificates",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable cert-manager integration to create self-signed certificates",
+                  "default": false
+                },
+                "duration": {
+                  "type": "string",
+                  "description": "Duration for the generated TLS certificates",
+                  "default": "240h0m0s",
+                  "pattern": "^([0-9]+(h|m|s|ms|us|ns))+$"
+                },
+                "renewBefore": {
+                  "type": "string",
+                  "description": "Time before expiration to renew the certificates",
+                  "default": "48h0m0s",
+                  "pattern": "^([0-9]+(h|m|s|ms|us|ns))+$"
+                },
+                "dnsNames": {
+                  "type": "array",
+                  "description": "Additional DNS names for the generated TLS certificates",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "externalAccess": {
+          "type": "object",
+          "description": "External access configuration for the MongoDB Replica Set",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable external access to the MongoDB Replica Set",
+              "default": false
+            },
+            "serviceType": {
+              "type": "string",
+              "description": "Kubernetes Service type for external access",
+              "enum": ["LoadBalancer", "NodePort", "ClusterIP"],
+              "default": "LoadBalancer"
+            },
+            "domain": {
+              "type": "string",
+              "description": "Domain name for external access"
+            },
+            "ports": {
+              "type": "object",
+              "description": "Port configuration for external access",
+              "properties": {
+                "servicePort": {
+                  "type": "integer",
+                  "description": "Port on which the service will be exposed",
+                  "default": 27017
+                },
+                "nodePort": {
+                  "type": "integer",
+                  "description": "NodePort to use if serviceType is NodePort",
+                  "minimum": 30000,
+                  "maximum": 32767
+                }
+              }
+            }
+          }
+        },
+        "roles": {
+          "type": "array",
+          "description": "Custom roles to create in MongoDB",
+          "items": {
+            "type": "object",
+            "required": ["role", "privileges"],
+            "properties": {
+              "role": {
+                "type": "string",
+                "description": "Name of the role"
+              },
+              "db": {
+                "type": "string",
+                "description": "Database where the role is created",
+                "default": "admin"
+              },
+              "privileges": {
+                "type": "array",
+                "description": "Privileges assigned to the role",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "object",
+                      "properties": {
+                        "db": {
+                          "type": "string"
+                        },
+                        "collection": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "roles": {
+                "type": "array",
+                "description": "Role privileges inherited by this role",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string"
+                    },
+                    "db": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "users": {
+          "type": "array",
+          "description": "Database users to create in MongoDB",
+          "items": {
+            "type": "object",
+            "required": ["name", "roles"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the database user"
+              },
+              "passwordSecretRef": {
+                "type": "object",
+                "description": "Secret reference for the database user password",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the secret"
+                  },
+                  "key": {
+                    "type": "string",
+                    "description": "Key in the secret that holds the password"
+                  }
+                }
+              },
+              "roles": {
+                "type": "array",
+                "description": "Roles assigned to the user",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the role"
+                    },
+                    "db": {
+                      "type": "string",
+                      "description": "Database where the role grants are applied"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "resources": {
+          "description": "Resource requests and limits for MongoDB pods",
+          "type": "object",
+          "properties": {
+            "requests": {
+              "$ref": "#/$defs/resources",
+              "description": "Resource requests for MongoDB pods"
+            },
+            "limits": {
+              "$ref": "#/$defs/resources",
+              "description": "Resource limits for MongoDB pods"
+            }
+          }
+        },
+        "securityContext": {
+          "type": "object",
+          "description": "Security context for MongoDB container"
+        },
+        "extraVolumeMounts": {
+          "type": "array",
+          "description": "Additional volume mounts for MongoDB container",
+          "items": {
+            "type": "object"
+          }
+        },
+        "extraEnvVars": {
+          "type": "array",
+          "description": "Additional environment variables for MongoDB container",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "description": "MongoDB Agent sidecar configuration",
+      "properties": {
+        "config": {
+          "type": "object",
+          "description": "Additional MongoDB Agent configuration options"
+        },
+        "resources": {
+          "description": "Resource requests and limits for MongoDB Agent sidecar",
+          "type": "object",
+          "properties": {
+            "requests": {
+              "$ref": "#/$defs/resources",
+              "description": "Resource requests for MongoDB Agent sidecar"
+            },
+            "limits": {
+              "$ref": "#/$defs/resources",
+              "description": "Resource limits for MongoDB Agent sidecar"
+            }
+          }
+        },
+        "securityContext": {
+          "type": "object",
+          "description": "Security context for MongoDB Agent container"
+        },
+        "extraVolumeMounts": {
+          "type": "array",
+          "description": "Additional volume mounts for MongoDB Agent container",
+          "items": {
+            "type": "object"
+          }
+        },
+        "extraEnvVars": {
+          "type": "array",
+          "description": "Additional environment variables for MongoDB Agent container",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "description": "Persistent storage configuration for MongoDB",
+      "properties": {
+        "size": {
+          "type": "object",
+          "description": "Storage request size for Mongodb data and logs volumes",
+          "properties": {
+            "data": {
+              "type": "string",
+              "description": "Size of the data volume",
+              "default": "8Gi",
+              "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|ki)$"
+            },
+            "logs": {
+              "type": "string",
+              "description": "Size of the logs volume",
+              "default": "1Gi",
+              "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|ki)$"
+            }
+          }
+        },
+        "storageClass": {
+          "type": ["string", "null"],
+          "description": "Storage class to use for persistent volumes"
+        },
+        "retentionPolicy": {
+          "type": "string",
+          "description": "Retention policy for the persistent volume",
+          "enum": ["Retain", "Delete"],
+          "default": "Retain"
+        },
+        "accessModes": {
+          "type": "array",
+          "description": "Access modes for the persistent volume",
+          "items": {
+            "type": "string",
+            "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
+          },
+          "default": ["ReadWriteOnce"]
+        }
+      }
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "description": "Pod security context for MongoDB pods"
+    },
+    "rbac": {
+      "type": "object",
+      "description": "RBAC configuration for the MongoDB chart",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Whether to create RBAC resources used by the MongoDB Kubernetes Operator to manage MongoDB resources",
+          "default": true
+        }
+      }
+    },
+    "extraVolumes": {
+      "type": "array",
+      "description": "Additional volumes to be added to MongoDB pods",
+      "items": {
+        "type": "object"
+      }
+    },
+    "initContainers": {
+      "type": "array",
+      "description": "Additional init containers to be added to MongoDB pods",
+      "items": {
+        "type": "object"
+      }
+    },
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node selector for MongoDB pods"
+    },
+    "affinity": {
+      "type": "object",
+      "description": "Affinity rules for MongoDB pods"
+    },
+    "tolerations": {
+      "type": "array",
+      "description": "Tolerations for MongoDB pods",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}

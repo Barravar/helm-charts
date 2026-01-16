@@ -1,0 +1,23 @@
+{{- if .Values.mongodb.tls.enabled }}
+{{- range .Values.mongodb.users }}
+---
+apiVersion: mongodb.com/v1
+kind: MongoDBUser
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  username: {{ printf "CN=%s,OU=%s,O=%s" .name $.Release.Namespace (include "mongodb.fullname" $) | quote }}
+  db: "$external"
+  roles:
+    {{- range .roles }}
+    - name: {{ .name }}
+      db: {{ .db }}
+    {{- end }}
+  {{- if .passwordSecretRef }}
+  passwordSecretKeyRef:
+    name: {{ .passwordSecretRef.name }}
+    key: {{ .passwordSecretRef.key }}
+  {{- end }}
+{{- end }}
+{{- end }}

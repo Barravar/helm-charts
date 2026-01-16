@@ -1,0 +1,27 @@
+{{- if .Values.mongodb.externalAccess.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mongodb.fullname" . }}-external
+  labels: 
+    {{- include "mongodb.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.mongodb.externalAccess.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    {{- include "mongodb.selectorLabels" . | nindent 4 }}
+  type: {{ .Values.mongodb.externalAccess.serviceType }}
+  ports:
+    - port: {{ .Values.mongodb.externalAccess.ports.servicePort }}
+      name: "mongodb"
+      targetPort: {{ .Values.mongodb.externalAccess.ports.servicePort }}
+      {{- if and (eq .Values.mongodb.externalAccess.serviceType "NodePort") .Values.mongodb.externalAccess.ports.nodePort -}}
+      nodePort: {{ .Values.mongodb.externalAccess.ports.nodePort }}
+      {{- end }}
+{{- end }}

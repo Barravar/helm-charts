@@ -1,0 +1,311 @@
+# Default values for MongoDB chart
+
+# Common settings
+# Partially override the names of the resources created by this chart - affects mongodb.name template
+nameOverride: ""
+# Fully override the names of the resources created by this chart - affects mongodb.fullname template
+fullNameOverride: ""
+# Override resources namespace
+namespaceOverride: ""
+# Default Kubernetes cluster domain
+clusterDomain: cluster.local
+
+# Common labels to be added to all deployed resources
+commonLabels: {}
+
+# Common annotations to be added to all deployed resources
+commonAnnotations: {}
+
+# MongoDB ServiceAccount configuration
+# If an existing ServiceAccount should be used, set 'create' to false and provide its name.
+# If a name is not provided, uses the 'default' service account
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+mongodb:
+  # MongoDB version to deploy
+  # If not set, uses the Chart.AppVersion
+  # version: ""
+
+  # MongoDB compatibility version
+  # This setting configures the featureCompatibilityVersion of MongoDB
+  # compatibilityVersion: ""
+
+  # MongoDB replicaset configuration
+  replicaset:
+    # MongoDB replica set name - this option is ignored if setting 'mongodb.config' or 'mongodb.existingConfigMap'
+    # If not set, defaults to the release name
+    # https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName
+    # name: ""
+
+    # Number of members in the Replica Set
+    members: 1
+
+    # Number of arbiters to add to the Replica Set
+    # It is not recommended to have more than one arbiter per Replica Set.
+    # https://www.mongodb.com/docs/manual/tutorial/add-replica-set-arbiter/
+    arbiters: 0
+
+    # Configuration for each member of the Replica Set
+    # priority: Priority for this member
+    # votes: Number of votes for this member
+    # tags: Additional tags for this member
+    # Example:
+    # memberConfig:
+    # - priority: "0"
+    #   votes: 1
+    #   tags:
+    #     region: us-east-1
+    memberConfig: []
+
+  # Additional MongoDB configuration using the same structure as the mongod configuration file.
+  # The additional config can be specified either in nested or dot notation.
+  # https://www.mongodb.com/docs/manual/reference/configuration-options/#configuration-file
+  # Example:
+  # config:
+  #   storage.wiredTiger.engineConfig.journalCompressor: zlib
+  #   net:
+  #     port: 40333
+  config: {}
+
+  # Additional settings for the MongoDB automation config created by the operator
+  # Example:
+  # automationConfig:
+  #   replicaSet:
+  #     settings:
+  #       electionTimeoutMillis: 20
+  automationConfig: {}
+
+  # Additional connection string options to be appended to the MongoDB connection strings.
+  # This applies to both the entire resource and individual users.
+  # https://www.mongodb.com/docs/manual/reference/connection-string-options/
+  connectionStringOptions: {}
+
+  # Authentication/authorization configuration
+  auth:
+    # Authentication modes to enable
+    modes: ["SCRAM"]
+    # Admin username and password
+    adminUsername: "admin"
+    adminPassword: ""
+    
+    # Use existing secret for admin credentials and shared secret for MongoDB replica set authentication
+    # Example:
+    # existingSecret:
+    #   name: "mongodb-admin-secret" # Name of the existing secret
+    #   adminPasswordKey: "mongodb-admin-password" # Secret key that holds the admin password
+    existingSecret: {}
+
+  # TLS configuration for client-server and server-server communication
+  tls:
+    # Enable TLS for MongoDB servers
+    enabled: false
+
+    # If TLS should be optional or required for client connections
+    # Options: optional, required
+    mode: optional
+
+    # Use existing secret containing CA certificate that signed the server certificates
+    # The certificate is expected to be available under the key "ca.crt"
+    caCertificateSecret: ""
+    
+    # Use existing secret containing TLS certificate and key for MongoDB servers
+    # The key and cert are expected to be PEM encoded and available at "tls.key" and "tls.crt" keys respectively.
+    # Alternatively, an entry tls.pem, containing the concatenation of cert and key, can be provided.
+    # If all keys are present, the tls.pem one needs to be equal to the concatenation of tls.crt and tls.key.
+    certificateSecret: ""
+
+    # Use cert-manager integration to automatically generate and renew TLS certificates
+    # If enabled, self-signed Issuer and Certificates will be created in the same namespace as MongoDB.
+    # Note: cert-manager must be previously installed in the cluster for this to work.
+    certManager: 
+      enabled: false
+      
+      # Duration for the generated certificates
+      duration: "240h0m0s"
+
+      # Time before expiration to renew the certificates
+      renewBefore: "48h0m0s"
+      
+      # Extra DNS names to be included in the generated certificates
+      # Example:
+      # dnsNames:
+      #   - "custom-dns-name.example.com"
+      dnsNames: []
+  
+  # Enable external access to the MongoDB Replica Set
+  # This creates a service and configures the external horizon for replicaSetHorizons setting in the format '<pod-name>.<external-domain>:<service-port>'
+  # Example:
+  # externalAccess:
+  #   enabled: false
+  #   serviceType: NodePort
+  #   domain: "external.domain"
+  #   ports:
+  #     servicePort: 27017
+  #     nodePort: ""
+  externalAccess: {}
+
+  # Additional MongoDB roles to create
+  # The role definition uses the same structure as the roles defined in MongoDB
+  # https://www.mongodb.com/docs/manual/reference/method/db.createRole/
+  #
+  # Example:
+  # roles:
+  #   - role: myCustomRole
+  #     db: admin
+  #     privileges:
+  #       - resource:
+  #           db: myDatabase
+  #           collection: myCollection
+  #         actions:
+  #           - find
+  #           - insert
+  #     roles:
+  #       - role: readWrite
+  #         db: myDatabase
+  roles: []
+
+  # Additional MongoDB users to create
+  # The user definition uses the same structure as the users defined in MongoDB
+  # https://www.mongodb.com/docs/manual/reference/method/db.createUser/
+  #
+  # Examples:
+  # 1. Minimal user definition
+  # users:
+  #   - name: my-user
+  #     roles:
+  #       - db: myDatabase
+  #         name: readWrite
+  # 
+  # 2. User with password stored in a Kubernetes Secret
+  # users:
+  #   - name: my-user
+  #     passwordSecretRef:
+  #       name: my-user-secret
+  #       key: password
+  #     roles:
+  #       - db: myDatabase
+  #         name: readWrite
+  users: []
+
+  # Resource requests and limits for MongoDB container
+  resources: {}
+  #   requests:
+  #     cpu: 100m
+  #     memory: 200Mi
+  #   limits:
+  #     cpu: 200m
+  #     memory: 400Mi
+
+  # MongoDB Container Security Context
+  # Only applies to mongodb container
+  securityContext: {}
+  #   privileged: false
+  #   allowPrivilegeEscalation: false
+  #   readOnlyRootFilesystem: false
+  #   capabilities:
+  #     drop: ["ALL"]
+  #   seccompProfile:
+  #     type: RuntimeDefault
+
+  # Extra volume mounts for the MongoDB container
+  extraVolumeMounts: []
+
+  # Extra environment variables for the MongoDB container
+  # extraEnvVars:
+  #   - name: EXAMPLE_ENV_VAR
+  #     value: "example-value"
+  extraEnvVars: []
+
+# MongoDB Agent sidecar configuration
+agent:
+  # MongoDB Automation Agent configuration
+  # Example:
+  # config:
+  #   auditLogRotate:
+  #     sizeThresholdMB: "100"
+  #     timeThresholdHrs: 24
+  #   logLevel: INFO
+  #   logRotate:
+  #     sizeThresholdMB: "10"
+  #     timeThresholdHrs: 24
+  config: {}
+
+  # Resource requests and limits for MongoDB Agent containers
+  # If set, applies to mongodb-agent container
+  resources: {}
+  #   requests:
+  #     cpu: 100m
+  #     memory: 250Mi
+  #   limits:
+  #     cpu: 200m
+  #     memory: 500Mi
+
+  # MongoDB Agent Container Security Context
+  # Only applies to mongodb-agent container
+  securityContext: {}
+  #   privileged: false
+  #   allowPrivilegeEscalation: false
+  #   readOnlyRootFilesystem: true
+  #   capabilities:
+  #     drop: ["ALL"]
+  #   seccompProfile:
+  #     type: RuntimeDefault
+
+  # Extra volume mounts for the MongoDB container
+  extraVolumeMounts: []
+
+  # Extra environment variables for the MongoDB container
+  extraEnvVars: []
+
+# Persistent storage configuration
+persistence: {}
+  # Storage request size for MongoDB data and logs volumes
+  # size: 
+  #   data: 8Gi
+  #   logs: 1Gi
+  
+  # Storage Class to use for MongoDB data volume
+  # storageClass: "" # If not set, uses the default sc
+
+  # Persistent Volume retention policy.
+  # This setting also controls how PVCs are managed during the StatefulSet lifecycle, configuring the behavior that applies
+  # when the StatefulSet is deleted or scaled down. To take effect, the 'StatefulSetAutoDeletePVC' feature gate needs to be enabled.
+  # Options: Retain (default), Delete
+  # https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#persistentvolumeclaim-retention
+  # retentionPolicy: "Retain"
+
+  # Access modes for the Persistent Volume.
+  # https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes
+  # accessModes: ["ReadWriteOnce"]
+
+# Pod Security Context
+podSecurityContext: {}
+  # runAsUser: 2000
+  # runAsNonRoot: true
+
+# Create RBAC resources for MongoDB
+# These are used by the MongoDB Kubernetes Operator to manage MongoDB resources
+rbac:
+  create: true
+
+# Extra volumes for the MongoDB pods
+# These can be added to mongod and mongodb-agent containers using 'mongodb.extraVolumesMounts' and 'agent.extraVolumesMounts' settings
+# extraVolumes:
+# - name: example-volume
+#   emptyDir: {}
+extraVolumes: []
+
+# Additional init containers to be added to the MongoDB pods
+initContainers: []
+
+# Node selector for the MongoDB pods
+nodeSelector: {}
+
+# Affinity rules for the MongoDB pods
+affinity: {}
+
+# Tolerations for the MongoDB pods
+tolerations: []
