@@ -52,10 +52,10 @@ helm uninstall mongodb -n mongodb
 
 | Parameter | Type | Description | Default Value |
 |-----------|------|-------------|---------------|
-| `mongodb.auth.modes` | list | Authentication modes to enable | `["SCRAM"]` |
 | `mongodb.auth.adminUsername` | string | Admin username | `admin` |
 | `mongodb.auth.adminPassword` | string | Admin password | `""` |
 | `mongodb.auth.existingSecret` | object | Use existing secret for admin credentials | `{}` |
+| `mongodb.auth.enableX509` | bool | If X.509 authentication mode should be enabled | `false` |
 | `mongodb.automationConfig` | object | Additional settings for the MongoDB automation config | `{}` |
 | `mongodb.config` | object | Additional MongoDB configuration | `{}` |
 | `mongodb.connectionStringOptions` | object | Additional connection string options | `{}` |

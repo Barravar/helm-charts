@@ -126,15 +126,6 @@
           "type": "object",
           "description": "Authentication configuration",
           "properties": {
-            "modes": {
-              "type": "array",
-              "description": "Authentication modes to enable",
-              "items": {
-                "type": "string",
-                "enum": ["SCRAM", "SCRAM-SHA-256", "SCRAM-SHA-1", "X509"],
-                "default": "SCRAM"
-              }
-            },
             "adminUsername": {
               "type": "string",
               "description": "Admin username for MongoDB",
@@ -142,17 +133,7 @@
             },
             "adminPassword": {
               "type": "string",
-              "description": "Admin password for MongoDB",
-              "validation": {
-                "if": {
-                  "field": "existingSecret",
-                  "is": {}
-                },
-                "then": {
-                  "required": true,
-                  "message": "adminPassword must be set if existingSecret is not provided"
-                }
-              }
+              "description": "Admin password for MongoDB"
             },
             "existingSecret": {
               "type": "object",
@@ -160,21 +141,18 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "Name of the existing secret",
-                  "validation": {
-                    "required": true,
-                    "message": "name is required in existingSecret"
-                  }
+                  "description": "Name of the existing secret"
                 },
                 "adminPasswordKey": {
                   "type": "string",
-                  "description": "Key in the secret that holds the admin password",
-                  "validation": {
-                    "required": true,
-                    "message": "adminPasswordKey is required in existingSecret"
-                  }
+                  "description": "Key in the secret that holds the admin password"
                 }
               }
+            },
+            "enableX509": {
+              "type": "boolean",
+              "description": "Enable X.509 authentication for MongoDB",
+              "default": false
             }
           }
         },
@@ -195,39 +173,11 @@
             },
             "caCertificateSecret": {
               "type": "string",
-              "description": "Name of the secret containing the CA certificate",
-              "validation": {
-                "if": {
-                  "field": "enabled",
-                  "is": true,
-                  "and": {
-                    "field": "certManager.enabled",
-                    "is": false
-                  }
-                },
-                "then": {
-                  "required": true,
-                  "message": "caCertificateSecret must be set if TLS is enabled and no self-signed certificates are used"
-                }
-              }
+              "description": "Name of the secret containing the CA certificate"
             },
             "certificateSecret": {
               "type": "string",
-              "description": "Name of the secret containing the TLS certificate and key",
-              "validation": {
-                "if": {
-                  "field": "enabled",
-                  "is": true,
-                  "and": {
-                    "field": "certManager.enabled",
-                    "is": false
-                  }
-                },
-                "then": {
-                  "required": true,
-                  "message": "certificateSecret must be set if TLS is enabled and no self-signed certificates are used"
-                }
-              }
+              "description": "Name of the secret containing the TLS certificate and key"
             },
             "certManager": {
               "type": "object",

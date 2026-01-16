@@ -85,8 +85,6 @@ mongodb:
 
   # Authentication/authorization configuration
   auth:
-    # Authentication modes to enable
-    modes: ["SCRAM"]
     # Admin username and password
     adminUsername: "admin"
     adminPassword: ""
@@ -97,6 +95,10 @@ mongodb:
     #   name: "mongodb-admin-secret" # Name of the existing secret
     #   adminPasswordKey: "mongodb-admin-password" # Secret key that holds the admin password
     existingSecret: {}
+
+    # If X.509 authentication mode should be enabled
+    # If enabled, requires TLS configuration
+    enableX509: false
 
   # TLS configuration for client-server and server-server communication
   tls:
@@ -168,6 +170,7 @@ mongodb:
   roles: []
 
   # Additional MongoDB users to create
+  # These are internal users created in addition to the admin user with authentication based on SCRAM
   # The user definition uses the same structure as the users defined in MongoDB
   # https://www.mongodb.com/docs/manual/reference/method/db.createUser/
   #

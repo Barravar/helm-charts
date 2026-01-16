@@ -59,7 +59,12 @@ spec:
   {{- end }}
   security:
     authentication:
-      modes: {{ toJson .Values.mongodb.auth.modes }}
+      modes:
+      - "SCRAM-SHA-256"
+      {{- if and .Values.mongodb.tls.enabled .Values.mongodb.auth.enableX509 }}
+      - "X509"
+      {{- end }}
+      agentMode: "SCRAM"
     tls:
       enabled: {{ .Values.mongodb.tls.enabled }}
       {{- if .Values.mongodb.tls.enabled }}
@@ -170,9 +175,7 @@ spec:
           name: userAdminAnyDatabase
         - db: config
           name: readWrite
-      {{- if has "SCRAM" .Values.mongodb.auth.modes }}
       scramCredentialsSecretName: {{ include "mongodb.authSecretName" . }}
-      {{- end }}
     {{- range .Values.mongodb.users }}
     - name: {{ .name }}
       db: {{ default "admin" .db }}
@@ -183,9 +186,7 @@ spec:
       {{- end }}
       roles:
         {{- toYaml .roles | nindent 8 }}
-      {{- if has "SCRAM" $.Values.mongodb.auth.modes }}
       scramCredentialsSecretName: {{ .passwordSecretRef.name }}
-      {{- end }}
       {{- if .additionalConnectionStringConfig }}
       additionalConnectionStringConfig:
         {{- toYaml .additionalConnectionStringConfig | nindent 8 }}
